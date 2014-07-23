@@ -23,10 +23,11 @@ import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.ImageButton;
 
 public class MenuBar extends Dialog {
     private WindowManager.LayoutParams mParameters;
-    private final int HEIGHT = 150;
+    final static int HEIGHT = 150;
 
     public MenuBar(Context activity) {
         super(activity, R.style.MenubarTheme);
@@ -39,6 +40,7 @@ public class MenuBar extends Dialog {
         setContentView(R.layout.menu_bar);
         setFlags();
         resizeToFit();
+        setStartButton();
     }
 
     private void setFlags() {
@@ -56,17 +58,14 @@ public class MenuBar extends Dialog {
         mParameters.height = HEIGHT;
     }
 
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-        if (hasFocus) {
-            getWindow().getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-        }
+    private void setStartButton() {
+        ImageButton startButton = (ImageButton) findViewById(R.id.startButton);
+        startButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ApplicationMenu applicationMenu = new ApplicationMenu(getContext());
+                applicationMenu.show();
+            }
+        });
     }
 }
