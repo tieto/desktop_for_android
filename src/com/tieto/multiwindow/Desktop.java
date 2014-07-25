@@ -47,6 +47,7 @@ public class Desktop extends Activity {
     private MultiwindowManager mMultiwindowManager;
     private ApplicationMenu mAppMenu;
     public final boolean DRAG_DEBUG = false;
+    private MenuBar mMenu;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,8 +121,14 @@ public class Desktop extends Activity {
         });
 
         mAppMenu = new ApplicationMenu(this);
-        MenuBar menu = new MenuBar(this, mAppMenu);
-        menu.show();
+        mMenu = new MenuBar(this, mAppMenu);
+        mMenu.show();
+    }
+
+    @Override
+    protected void onStop() {
+        mMenu.maximizeMinimizedWindows();
+        super.onStop();
     }
 
     public void addIconToDesktop(int x, int y, final String packageName) {

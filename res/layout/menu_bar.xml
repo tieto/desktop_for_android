@@ -19,16 +19,28 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="match_parent"
-    android:layout_alignParentBottom="true"
-    android:gravity="bottom"
     android:orientation="horizontal" >
 
     <ImageButton
         android:id="@+id/startButton"
+        style="@style/startButton"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
+        android:clickable="true"
         android:src="@drawable/ic_launcher" />
+
+    <LinearLayout
+        android:id="@+id/bottomBar"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_toRightOf="@+id/startButton"
+        android:orientation="horizontal" >
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="#47A0B8"
+            android:visibility="visible" />
+    </LinearLayout>
 
 </RelativeLayout>

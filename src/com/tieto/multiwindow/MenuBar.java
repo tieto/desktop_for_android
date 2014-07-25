@@ -19,24 +19,48 @@ package com.tieto.multiwindow;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
+
+import com.tieto.extension.multiwindow.MultiwindowManager;
+import com.tieto.extension.multiwindow.OnWindowChangeListener;
+import com.tieto.extension.multiwindow.Window;
 
 public class MenuBar extends Dialog {
     private WindowManager.LayoutParams mParameters;
     private ApplicationMenu mAppMenu;
-    final static int HEIGHT = 150;
+    private LinearLayout mLayout;
+    private Context mContext;
+    static final int HEIGHT = 150;
+    private MultiwindowManager mMultiwindowManager;
 
     public MenuBar(Context ctx, ApplicationMenu appMenu) {
         super(ctx, R.style.MenubarTheme);
         setContentView(R.layout.menu_bar);
         mAppMenu = appMenu;
+        mLayout = ((LinearLayout) findViewById(R.id.bottomBar));
+        mContext = ctx;
+        mMultiwindowManager = new MultiwindowManager(ctx);
+        mMultiwindowManager
+                .setOnWindowChangeListener(new OnWindowChangeListener() {
+                    @Override
+                    public void onWindowAdd(final Window window) {
+                        addButton(window);
+                    }
 
+                    @Override
+                    public void onWindowRemoved(final Window window) {
+                        removeButton(window);
+                    }
+                });
         setFlags();
         resizeToFit();
         setStartButton();
+        initBar();
         setCancelable(false);
     }
 
@@ -56,8 +80,49 @@ public class MenuBar extends Dialog {
         mParameters.height = HEIGHT;
     }
 
+    public void addButton(final Window window) {
+        mLayout.post(new Runnable() {
+            @Override
+            public void run() {
+                AppInfo appInfo = new AppInfo(mContext, window);
+                addButtonToView(appInfo);
+            }
+        });
+    }
+
+    public void removeButton(Window window) {
+        for (int i = 0; i< mLayout.getChildCount(); i++) {
+            if (mLayout.getChildAt(i) instanceof AppButton) {
+                final AppButton appButton = (AppButton) mLayout.getChildAt(i);
+                if (appButton.getAppInfo().getAppWindow().equals(window)) {
+                    mLayout.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            mLayout.removeView(appButton);
+                        }
+                    });
+                    return;
+                }
+            }
+        }
+    }
+
+    private void initBar() {
+        for (Window window : mMultiwindowManager.getAllWindows()) {
+            AppInfo appInfo = new AppInfo(mContext, window);
+            addButtonToView(appInfo);
+        }
+    }
+
     private void setStartButton() {
         ImageButton startButton = (ImageButton) findViewById(R.id.startButton);
+        mAppMenu.setOnAppListener(new OnAppStartListener() {
+            @Override
+            public void actionPerformed(Intent intent) {
+                mMultiwindowManager.startActivity(intent);
+            }
+        });
+
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -66,5 +131,21 @@ public class MenuBar extends Dialog {
                 }
             }
         });
+    }
+
+    private void addButtonToView(AppInfo appInfo) {
+        AppButton appButton = new AppButton(mContext, appInfo);
+        mLayout.addView(appButton);
+    }
+
+    public void maximizeMinimizedWindows() {
+        for (int i = 0; i< mLayout.getChildCount(); i++) {
+            if (mLayout.getChildAt(i) instanceof AppButton) {
+                AppButton appButton = (AppButton) mLayout.getChildAt(i);
+                if (appButton.isMinimized()) {
+                    appButton.maximizeWindow();
+                }
+            }
+        }
     }
 }
