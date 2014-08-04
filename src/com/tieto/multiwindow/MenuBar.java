@@ -19,7 +19,6 @@ package com.tieto.multiwindow;
 
 import android.app.Dialog;
 import android.content.Context;
-import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
@@ -27,20 +26,18 @@ import android.widget.ImageButton;
 
 public class MenuBar extends Dialog {
     private WindowManager.LayoutParams mParameters;
+    private ApplicationMenu mAppMenu;
     final static int HEIGHT = 150;
 
-    public MenuBar(Context activity) {
-        super(activity, R.style.MenubarTheme);
-        setCancelable(false);
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public MenuBar(Context ctx, ApplicationMenu appMenu) {
+        super(ctx, R.style.MenubarTheme);
         setContentView(R.layout.menu_bar);
+        mAppMenu = appMenu;
+
         setFlags();
         resizeToFit();
         setStartButton();
+        setCancelable(false);
     }
 
     private void setFlags() {
@@ -63,8 +60,9 @@ public class MenuBar extends Dialog {
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ApplicationMenu applicationMenu = new ApplicationMenu(getContext());
-                applicationMenu.show();
+                if(mAppMenu != null){
+                    mAppMenu.show();
+                }
             }
         });
     }
