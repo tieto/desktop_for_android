@@ -20,6 +20,8 @@ package com.tieto.multiwindow;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.tieto.extension.multiwindow.MultiwindowManager;
+
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.ClipData;
@@ -53,10 +55,12 @@ public class ApplicationMenu extends Dialog {
     private final List<ResolveInfo> mAppInfo;
     private AddIconToDesktopListener mAddIconToDesktopListener;
     public final boolean DRAG_DEBUG = false;
+    private MultiwindowManager mMultiwindowManager;
 
     public ApplicationMenu(final Context ctx, AddIconToDesktopListener listener) {
         super(ctx, R.style.ApplicationMenuTheme);
         mAddIconToDesktopListener = listener;
+        mMultiwindowManager = new MultiwindowManager(ctx);
 
         int useableScreenHeight = ctx.getApplicationContext().getResources()
                 .getDisplayMetrics().heightPixels;
@@ -95,8 +99,7 @@ public class ApplicationMenu extends Dialog {
                     int position, long id) {
                 Intent launchIntent = mPackerManager.getLaunchIntentForPackage(mAppInfo
                         .get(position).activityInfo.packageName);
-                ctx.startActivity(launchIntent);
-
+                mMultiwindowManager.startActivity(launchIntent);
                 dismiss();
             }
         });

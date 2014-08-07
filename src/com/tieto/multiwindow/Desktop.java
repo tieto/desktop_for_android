@@ -17,6 +17,8 @@
  */
 package com.tieto.multiwindow;
 
+import com.tieto.extension.multiwindow.MultiwindowManager;
+
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.Context;
@@ -39,11 +41,13 @@ import android.widget.TextView;
 public class Desktop extends Activity {
 
     private View mDesktopView;
+    private MultiwindowManager mMultiwindowManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_desktop);
+        mMultiwindowManager = new MultiwindowManager(getBaseContext());
 
         mDesktopView = findViewById(R.id.desktop);
         mDesktopView.setOnDragListener(new OnDragListener() {
@@ -109,7 +113,7 @@ public class Desktop extends Activity {
                         Intent launchIntent = getBaseContext()
                                 .getPackageManager()
                                 .getLaunchIntentForPackage(packageName);
-                        getBaseContext().startActivity(launchIntent);
+                        mMultiwindowManager.startActivity(launchIntent);
 
                     }
                 });
