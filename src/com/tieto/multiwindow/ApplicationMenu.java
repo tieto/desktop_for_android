@@ -30,13 +30,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.util.Log;
-import android.view.DragEvent;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.DragShadowBuilder;
-import android.view.View.OnDragListener;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.AdapterView;
@@ -53,13 +50,10 @@ public class ApplicationMenu extends Dialog {
     private final int mApplicationMenuVerticalOffset = 50;
     private final PackageManager mPackerManager;
     private final List<ResolveInfo> mAppInfo;
-    private AddIconToDesktopListener mAddIconToDesktopListener;
-    public final boolean DRAG_DEBUG = false;
     private MultiwindowManager mMultiwindowManager;
 
-    public ApplicationMenu(final Context ctx, AddIconToDesktopListener listener) {
+    public ApplicationMenu(final Context ctx) {
         super(ctx, R.style.ApplicationMenuTheme);
-        mAddIconToDesktopListener = listener;
         mMultiwindowManager = new MultiwindowManager(ctx);
 
         int useableScreenHeight = ctx.getApplicationContext().getResources()
@@ -109,67 +103,17 @@ public class ApplicationMenu extends Dialog {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view,
                     int position, long id) {
-                ClipData.Item item = new ClipData.Item(
+                ClipData.Item iconType = new ClipData.Item("AppMenuIcon");
+                ClipData.Item packageName = new ClipData.Item(
                         mAppInfo.get(position).activityInfo.packageName);
                 String[] clipDescription = { ClipDescription.MIMETYPE_TEXT_PLAIN };
-                ClipData dragData = new ClipData("", clipDescription, item);
+                ClipData dragData = new ClipData("", clipDescription, iconType);
+                dragData.addItem(packageName);
 
                 ImageView dragIcon = (ImageView) view.findViewById(R.id.icon);
                 DragShadowBuilder shadowBuilder = new DragShadowBuilder(dragIcon);
-
                 view.startDrag(dragData, shadowBuilder, view, 0);
 
-                return true;
-            }
-        });
-        getWindow().getDecorView().setOnDragListener(new OnDragListener() {
-            private final String TAG = "APPMENU_DRAG_EVENT";
-            private int mX, mY;
-
-            @Override
-            public boolean onDrag(View v, DragEvent event) {
-
-                switch (event.getAction()) {
-                case DragEvent.ACTION_DRAG_STARTED:
-                    if (DRAG_DEBUG) {
-                        Log.d(TAG, "ACTION_DRAG_STARTED");
-                    }
-                    break;
-                case DragEvent.ACTION_DRAG_ENTERED:
-                    if (DRAG_DEBUG) {
-                        Log.d(TAG, "ACeTION_DRAG_ENTERED");
-                    }
-                    break;
-                case DragEvent.ACTION_DRAG_EXITED:
-                    if (DRAG_DEBUG) {
-                        Log.d(TAG, "ACTION_DRAG_EXITED");
-                    }
-                    break;
-                case DragEvent.ACTION_DRAG_LOCATION:
-                    if (DRAG_DEBUG) {
-                        Log.d(TAG, "ACTION_DRAG_LOCATION");
-                    }
-                    mX = (int) event.getX();
-                    mY = (int) event.getY();
-                    break;
-                case DragEvent.ACTION_DRAG_ENDED:
-                    if (DRAG_DEBUG) {
-                        Log.d(TAG, "ACTION_DRAG_ENDED");
-                    }
-                    dismiss();
-                    break;
-                case DragEvent.ACTION_DROP:
-                    if (DRAG_DEBUG) {
-                        Log.d(TAG, "ACTION_DROP");
-                    }
-                    View view = (View) event.getLocalState();
-                    String packageName = event.getClipData().getItemAt(0)
-                            .getText().toString();
-                    mAddIconToDesktopListener.onAddIcon(view, mX, mY, packageName);
-                    break;
-                default:
-                    break;
-                }
                 return true;
             }
         });
