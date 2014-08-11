@@ -42,6 +42,7 @@ public class MenuBar extends Dialog {
 
     private void setFlags() {
         mParameters = getWindow().getAttributes();
+        getWindow().setType(WindowManager.LayoutParams.TYPE_PRIORITY_PHONE);
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
         getWindow().addFlags(
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS

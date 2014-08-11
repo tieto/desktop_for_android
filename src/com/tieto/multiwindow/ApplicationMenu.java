@@ -65,6 +65,7 @@ public class ApplicationMenu extends Dialog {
         int useableScreenHeight = ctx.getApplicationContext().getResources()
                 .getDisplayMetrics().heightPixels;
 
+        getWindow().setType(WindowManager.LayoutParams.TYPE_PRIORITY_PHONE);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
         getWindow().setDimAmount(0.0f);
         getWindow().setGravity(Gravity.TOP | Gravity.LEFT);
