@@ -33,7 +33,6 @@ import android.content.pm.ResolveInfo;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.DragShadowBuilder;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.AdapterView;
@@ -48,6 +47,7 @@ public class ApplicationMenu extends Dialog {
 
     private final int mApplicationMenuWidth = 700;
     private final int mApplicationMenuVerticalOffset = 50;
+    private final int mDragShadowSize = 150;
     private final PackageManager mPackerManager;
     private final List<ResolveInfo> mAppInfo;
     private MultiwindowManager mMultiwindowManager;
@@ -111,7 +111,7 @@ public class ApplicationMenu extends Dialog {
                 dragData.addItem(packageName);
 
                 ImageView dragIcon = (ImageView) view.findViewById(R.id.icon);
-                DragShadowBuilder shadowBuilder = new DragShadowBuilder(dragIcon);
+                AppMenuDragShadowBuilder shadowBuilder = new AppMenuDragShadowBuilder(dragIcon, mDragShadowSize, mDragShadowSize);
                 view.startDrag(dragData, shadowBuilder, view, 0);
 
                 return true;

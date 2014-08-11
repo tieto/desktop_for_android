@@ -128,7 +128,7 @@ public class Desktop extends Activity {
         final String TAG = "DESKTOP_DRAG_EVENT";
         LayoutInflater li = (LayoutInflater) getBaseContext()
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        LinearLayout desktopIcon = (LinearLayout) li.inflate(R.layout.desktop_icon, null);
+        LinearLayout desktopIcon = (LinearLayout) li.inflate(R.layout.desktop_icon, mDesktopView, false);
 
         try {
             ApplicationInfo app = getPackageManager().getApplicationInfo(packageName, 0);
@@ -140,9 +140,9 @@ public class Desktop extends Activity {
             Log.e(TAG, "Error: " + e);
         }
 
-        LayoutParams lp = (LayoutParams) desktopIcon.getLayoutParams();
-        lp.leftMargin = x;
-        lp.topMargin = y;
+        LayoutParams lp = new LayoutParams(desktopIcon.getLayoutParams());
+        lp.leftMargin = x - desktopIcon.findViewById(R.id.desktop_icon).getLayoutParams().width / 2;
+        lp.topMargin = y - desktopIcon.findViewById(R.id.desktop_icon).getLayoutParams().height / 2;
         desktopIcon.setLayoutParams(lp);
         mDesktopView.addView(desktopIcon);
 
