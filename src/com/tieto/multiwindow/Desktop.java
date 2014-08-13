@@ -29,9 +29,12 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ApplicationInfo;
+import android.database.Cursor;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.DragEvent;
 import android.view.LayoutInflater;
@@ -57,7 +60,9 @@ public class Desktop extends Activity {
     private ApplicationMenu mAppMenu;
     public final boolean DRAG_DEBUG = false;
     private MenuBar mMenu;
+    public final int SELECT_PICTURE = 1;
     private ArrayList<DesktopIcon> mDesktopIcons;
+    private String mWallpaperPath;
     private SharedPreferences mAppSharedPrefs;
     private Editor mPrefsEditor;
     private Gson mGson;
@@ -145,6 +150,16 @@ public class Desktop extends Activity {
         mMenu = new MenuBar(this, mAppMenu);
         mMenu.show();
         loadIcons();
+        loadWallpaper();
+
+        findViewById(R.id.browseGallery).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_PICK,
+                        android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(intent, SELECT_PICTURE);
+            }
+        });
     }
 
     @Override
@@ -153,7 +168,19 @@ public class Desktop extends Activity {
         super.onStop();
         String json = mGson.toJson(mDesktopIcons);
         mPrefsEditor.putString("DesktopIcons", json);
+        mPrefsEditor.putString("WallpaperPath", mWallpaperPath);
         mPrefsEditor.commit();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == SELECT_PICTURE) {
+            if (resultCode == RESULT_OK) {
+                mWallpaperPath = getPath(data.getData());
+                Drawable imgDrawable = Drawable.createFromPath(mWallpaperPath);
+                mDesktopView.setBackground(imgDrawable);
+            }
+        }
     }
 
     public void addIconToDesktop(int x, int y, final String packageName, boolean dropAction) {
@@ -221,6 +248,25 @@ public class Desktop extends Activity {
         } else {
             mDesktopIcons = new ArrayList<DesktopIcon>();
         }
+    }
+
+    private void loadWallpaper() {
+        mWallpaperPath = mAppSharedPrefs.getString("WallpaperPath", "");
+        if (mWallpaperPath != null) {
+            Drawable imgDrawable = Drawable.createFromPath(mWallpaperPath);
+            mDesktopView.setBackground(imgDrawable);
+        }
+    }
+
+    private String getPath(Uri uri) {
+        String[] projection = { MediaStore.Images.Media.DATA };
+        Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
+        if (cursor != null) {
+            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            cursor.moveToFirst();
+            return cursor.getString(column_index);
+        }
+        return uri.getPath();
     }
 
     private void updateIconsList(String packageName, int newX, int newY) {
