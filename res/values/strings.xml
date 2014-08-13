@@ -20,5 +20,6 @@
 
     <string name="app_name">Multiwindow</string>
     <string name="hello_world">Hello world!</string>
+    <string name="icon_already_on_desktop">This icon is already on desktop.</string>
 
 </resources>

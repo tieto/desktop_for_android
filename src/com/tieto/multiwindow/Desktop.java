@@ -18,15 +18,20 @@
 package com.tieto.multiwindow;
 
 import com.tieto.extension.multiwindow.MultiwindowManager;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipDescription;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.content.pm.ApplicationInfo;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.DragEvent;
 import android.view.LayoutInflater;
@@ -40,6 +45,10 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 public class Desktop extends Activity {
 
@@ -48,11 +57,18 @@ public class Desktop extends Activity {
     private ApplicationMenu mAppMenu;
     public final boolean DRAG_DEBUG = false;
     private MenuBar mMenu;
+    private ArrayList<DesktopIcon> mDesktopIcons;
+    private SharedPreferences mAppSharedPrefs;
+    private Editor mPrefsEditor;
+    private Gson mGson;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_desktop);
+        mAppSharedPrefs = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
+        mPrefsEditor = mAppSharedPrefs.edit();
+        mGson = new Gson();
         mMultiwindowManager = new MultiwindowManager(getBaseContext());
         mDesktopView = (ViewGroup) findViewById(R.id.desktop);
         getWindow().getDecorView().setOnDragListener(new OnDragListener() {
@@ -102,18 +118,23 @@ public class Desktop extends Activity {
                     mX = (int) event.getX();
                     mY = (int) event.getY();
                     String dragItemSource = event.getClipData().getItemAt(0).getText().toString();
+                    String packageName = event.getClipData().getItemAt(1).getText().toString();
                     if (dragItemSource.equals("DesktopIcon")) {
                         mLayoutParams.leftMargin = mX - view.getWidth() / 2;
                         mLayoutParams.topMargin = mY - view.getHeight() / 2;
                         view.setLayoutParams(mLayoutParams);
+                        updateIconsList(packageName, mX - view.getWidth() / 2, mY - view.getHeight() / 2);
                     }
                     if (dragItemSource.equals("AppMenuIcon")) {
-                        String packageName = event.getClipData().getItemAt(1).getText().toString();
-                        addIconToDesktop(mX, mY, packageName);
+                        if (iconExists(packageName)) {
+                            Toast.makeText(getBaseContext(), R.string.icon_already_on_desktop,
+                                    Toast.LENGTH_SHORT).show();
+                        } else {
+                            addIconToDesktop(mX, mY, packageName, true);
+                            mDesktopIcons.add(new DesktopIcon(mX, mY, packageName));
+                        }
                         mAppMenu.dismiss();
                     }
-                    break;
-                default:
                     break;
                 }
                 return true;
@@ -123,15 +144,19 @@ public class Desktop extends Activity {
         mAppMenu = new ApplicationMenu(this);
         mMenu = new MenuBar(this, mAppMenu);
         mMenu.show();
+        loadIcons();
     }
 
     @Override
     protected void onStop() {
         mMenu.maximizeMinimizedWindows();
         super.onStop();
+        String json = mGson.toJson(mDesktopIcons);
+        mPrefsEditor.putString("DesktopIcons", json);
+        mPrefsEditor.commit();
     }
 
-    public void addIconToDesktop(int x, int y, final String packageName) {
+    public void addIconToDesktop(int x, int y, final String packageName, boolean dropAction) {
         final String TAG = "DESKTOP_DRAG_EVENT";
         LayoutInflater li = (LayoutInflater) getBaseContext()
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -148,8 +173,12 @@ public class Desktop extends Activity {
         }
 
         LayoutParams lp = new LayoutParams(desktopIcon.getLayoutParams());
-        lp.leftMargin = x - desktopIcon.findViewById(R.id.desktop_icon).getLayoutParams().width / 2;
-        lp.topMargin = y - desktopIcon.findViewById(R.id.desktop_icon).getLayoutParams().height / 2;
+        lp.leftMargin = x;
+        lp.topMargin = y;
+        if (dropAction) {
+            lp.leftMargin -= desktopIcon.findViewById(R.id.desktop_icon).getLayoutParams().width / 2;
+            lp.topMargin -= desktopIcon.findViewById(R.id.desktop_icon).getLayoutParams().height / 2;
+        }
         desktopIcon.setLayoutParams(lp);
         mDesktopView.addView(desktopIcon);
 
@@ -161,7 +190,6 @@ public class Desktop extends Activity {
                         .getPackageManager()
                         .getLaunchIntentForPackage(packageName);
                 mMultiwindowManager.startActivity(launchIntent);
-
             }
         });
         desktopIcon.setOnLongClickListener(new OnLongClickListener() {
@@ -169,12 +197,83 @@ public class Desktop extends Activity {
             @Override
             public boolean onLongClick(View v) {
                 ClipData.Item iconType = new ClipData.Item("DesktopIcon");
+                ClipData.Item packName = new ClipData.Item((CharSequence) packageName);
                 String[] clipDescription = { ClipDescription.MIMETYPE_TEXT_PLAIN };
                 ClipData dragData = new ClipData("", clipDescription, iconType);
+                dragData.addItem(packName);
+
                 DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(v);
                 v.startDrag(dragData, shadowBuilder, v, 0);
+
                 return true;
             }
         });
+    }
+
+    private void loadIcons() {
+        String json = mAppSharedPrefs.getString("DesktopIcons", "");
+        Type type = new TypeToken<ArrayList<DesktopIcon>>(){}.getType();
+        if (mGson.fromJson(json, type) != null) {
+            mDesktopIcons = mGson.fromJson(json, type);
+            for (DesktopIcon desktopIcon : mDesktopIcons) {
+                addIconToDesktop(desktopIcon.getX(), desktopIcon.getY(), desktopIcon.getPackage(), false);
+            }
+        } else {
+            mDesktopIcons = new ArrayList<DesktopIcon>();
+        }
+    }
+
+    private void updateIconsList(String packageName, int newX, int newY) {
+        for (DesktopIcon desktopIcon : mDesktopIcons) {
+            if (desktopIcon.getPackage().equals(packageName)) {
+                desktopIcon.setX(newX);
+                desktopIcon.setY(newY);
+            }
+        }
+    }
+
+    private boolean iconExists(String packageName) {
+        for (DesktopIcon desktopIcon : mDesktopIcons) {
+            if (desktopIcon.getPackage().equals(packageName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private class DesktopIcon {
+        private int mX;
+        private int mY;
+        private String mPackage;
+
+        public DesktopIcon(int mX, int mY, String mPackage) {
+            this.mX = mX;
+            this.mY = mY;
+            this.mPackage = mPackage;
+        }
+
+        public int getX() {
+            return mX;
+        }
+
+        public void setX(int mX) {
+            this.mX = mX;
+        }
+
+        public int getY() {
+            return mY;
+        }
+
+        public void setY(int mY) {
+            this.mY = mY;
+        }
+
+        public String getPackage() {
+            return mPackage;
+        }
+
+        public void setPackage(String mPackage) {
+            this.mPackage = mPackage;
+        }
     }
 }

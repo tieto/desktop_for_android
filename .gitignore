@@ -1,7 +1,6 @@
 lint.xml
 bin
 gen
-libs
 .classpath
 .project
 assets
