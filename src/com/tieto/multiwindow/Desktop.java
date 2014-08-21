@@ -18,6 +18,7 @@
 package com.tieto.multiwindow;
 
 import com.tieto.extension.multiwindow.MultiwindowManager;
+import java.io.File;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 
@@ -30,6 +31,10 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ApplicationInfo;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Point;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -45,7 +50,7 @@ import android.view.View.OnDragListener;
 import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -107,8 +112,6 @@ public class Desktop extends Activity {
                     if (DRAG_DEBUG) {
                         Log.d(TAG, "ACTION_DRAG_LOCATION");
                     }
-                    mX = (int) event.getX();
-                    mY = (int) event.getY();
                     break;
                 case DragEvent.ACTION_DRAG_ENDED:
                     if (DRAG_DEBUG) {
@@ -125,18 +128,22 @@ public class Desktop extends Activity {
                     String dragItemSource = event.getClipData().getItemAt(0).getText().toString();
                     String packageName = event.getClipData().getItemAt(1).getText().toString();
                     if (dragItemSource.equals("DesktopIcon")) {
-                        mLayoutParams.leftMargin = mX - view.getWidth() / 2;
-                        mLayoutParams.topMargin = mY - view.getHeight() / 2;
-                        view.setLayoutParams(mLayoutParams);
-                        updateIconsList(packageName, mX - view.getWidth() / 2, mY - view.getHeight() / 2);
+                        mLayoutParams.leftMargin = iconPosCorrection(mX, view.getWidth(), mDesktopView.getWidth());
+                        mLayoutParams.topMargin = iconPosCorrection(mY, view.getHeight(), mDesktopView.getHeight());
+                        mDesktopView.removeView(view);
+                        mDesktopView.addView(view, mLayoutParams);
+                        updateIconsList(packageName, mLayoutParams.leftMargin, mLayoutParams.topMargin);
                     }
                     if (dragItemSource.equals("AppMenuIcon")) {
                         if (iconExists(packageName)) {
                             Toast.makeText(getBaseContext(), R.string.icon_already_on_desktop,
                                     Toast.LENGTH_SHORT).show();
                         } else {
-                            addIconToDesktop(mX, mY, packageName, true);
-                            mDesktopIcons.add(new DesktopIcon(mX, mY, packageName));
+                            View handler = addIconToDesktop(mX, mY, packageName, true);
+                            LayoutParams handlerParams = (LayoutParams) handler.getLayoutParams();
+                            mDesktopIcons.add(new DesktopIcon(handlerParams.leftMargin,
+                                                              handlerParams.topMargin,
+                                                              packageName));
                         }
                         mAppMenu.dismiss();
                     }
@@ -176,18 +183,18 @@ public class Desktop extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == SELECT_PICTURE) {
             if (resultCode == RESULT_OK) {
-                mWallpaperPath = getPath(data.getData());
-                Drawable imgDrawable = Drawable.createFromPath(mWallpaperPath);
-                mDesktopView.setBackground(imgDrawable);
+                mPrefsEditor.putString("WallpaperPath", getPath(data.getData()));
+                mPrefsEditor.commit();
+                loadWallpaper();
             }
         }
     }
 
-    public void addIconToDesktop(int x, int y, final String packageName, boolean dropAction) {
+    public View addIconToDesktop(int x, int y, final String packageName, boolean dropAction) {
         final String TAG = "DESKTOP_DRAG_EVENT";
         LayoutInflater li = (LayoutInflater) getBaseContext()
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        LinearLayout desktopIcon = (LinearLayout) li.inflate(R.layout.desktop_icon, mDesktopView, false);
+        RelativeLayout desktopIcon = (RelativeLayout) li.inflate(R.layout.desktop_icon, mDesktopView, false);
 
         try {
             ApplicationInfo app = getPackageManager().getApplicationInfo(packageName, 0);
@@ -203,8 +210,7 @@ public class Desktop extends Activity {
         lp.leftMargin = x;
         lp.topMargin = y;
         if (dropAction) {
-            lp.leftMargin -= desktopIcon.findViewById(R.id.desktop_icon).getLayoutParams().width / 2;
-            lp.topMargin -= desktopIcon.findViewById(R.id.desktop_icon).getLayoutParams().height / 2;
+            dropPosCorrection(desktopIcon, x, y, lp);
         }
         desktopIcon.setLayoutParams(lp);
         mDesktopView.addView(desktopIcon);
@@ -235,6 +241,8 @@ public class Desktop extends Activity {
                 return true;
             }
         });
+
+        return desktopIcon;
     }
 
     private void loadIcons() {
@@ -252,9 +260,13 @@ public class Desktop extends Activity {
 
     private void loadWallpaper() {
         mWallpaperPath = mAppSharedPrefs.getString("WallpaperPath", "");
-        if (mWallpaperPath != null) {
-            Drawable imgDrawable = Drawable.createFromPath(mWallpaperPath);
-            mDesktopView.setBackground(imgDrawable);
+        File file = new File(mWallpaperPath);
+        if (file.exists()) {
+            Bitmap imgBitmap = BitmapFactory.decodeFile(mWallpaperPath);
+            Point size = new Point();
+            getWindowManager().getDefaultDisplay().getSize(size);
+            imgBitmap = Bitmap.createScaledBitmap(imgBitmap, size.x, size.y, false);
+            mDesktopView.setBackground(new BitmapDrawable(imgBitmap));
         }
     }
 
@@ -285,6 +297,57 @@ public class Desktop extends Activity {
             }
         }
         return false;
+    }
+
+    /**
+     * This function is returning updated position of particular coordinate when icon is dragged
+     * and dropped outside visible screen. It corrects icon position to fit visible screen size.
+     *
+     * @param coordinate x-coordinate or y-coordinate of drop location
+     * @param viewSize width or height of dragged view
+     * @param desktopSize width or height of visible screen
+     * @return updated coordinate, that will fit to screen border
+     */
+    private int iconPosCorrection(int coordinate, int viewSize, int desktopSize) {
+        int dropPosition = coordinate - viewSize/2;
+        if (dropPosition < 0) {
+            return 0;
+        } else if (dropPosition + viewSize > desktopSize) {
+            return desktopSize - viewSize;
+        }
+        return dropPosition;
+    }
+
+    /**
+     * This function is applying updated position of icon during drop from ApplicationMenu to Desktop
+     * when drop is outside visible screen. It corrects icon position to fit visible screen size.
+     *
+     * @param desktopIcon view to be dropped
+     * @param x x-coordinate of drop
+     * @param y y-coordinate of drop
+     * @param lp layout parameters of desktopIcon
+     */
+    private void dropPosCorrection(View desktopIcon, int x, int y, LayoutParams lp) {
+        int desktopIconWidth = desktopIcon.findViewById(R.id.desktop_icon).getLayoutParams().width;
+        int desktopIconHeigth = desktopIcon.findViewById(R.id.desktop_icon).getLayoutParams().height;
+        int dropPositionX = x - desktopIconWidth / 2;
+        int dropPositionY = y - desktopIconHeigth / 2;
+
+        if (dropPositionX < 0) {
+            lp.leftMargin = 0;
+        } else if (dropPositionX + desktopIconWidth > mDesktopView.getWidth()) {
+            lp.leftMargin = mDesktopView.getWidth() - desktopIconWidth;
+        } else {
+            lp.leftMargin = dropPositionX;
+        }
+
+        if (dropPositionY < 0) {
+            lp.topMargin = 0;
+        } else if (dropPositionY + desktopIconHeigth > mDesktopView.getHeight()) {
+            lp.topMargin = mDesktopView.getHeight() - desktopIconHeigth;
+        } else {
+            lp.topMargin = dropPositionY;
+        }
     }
 
     private class DesktopIcon {
