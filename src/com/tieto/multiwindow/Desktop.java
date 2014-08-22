@@ -50,6 +50,7 @@ import android.view.View.OnDragListener;
 import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TextView;
@@ -86,6 +87,11 @@ public class Desktop extends Activity {
             private LayoutParams mLayoutParams;
             private final String TAG = "DESKTOP_DRAG_EVENT";
             private View view;
+            private LinearLayout mDeleteBar;
+            private LayoutParams mDeleteBarParams;
+            private LayoutInflater mLayoutInflater = (LayoutInflater) getBaseContext()
+                    .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            private boolean mIsInDeleteZone;
 
             @Override
             public boolean onDrag(View v, DragEvent event) {
@@ -97,6 +103,12 @@ public class Desktop extends Activity {
                     }
                     mLayoutParams = (LayoutParams) view.getLayoutParams();
                     view.setAlpha(0.3f);
+
+                    mDeleteBar = (LinearLayout) mLayoutInflater.inflate(R.layout.delete_icon_bar, mDesktopView, false);
+                    ((ImageView) mDeleteBar.findViewById(R.id.delete_icon)).setImageResource(android.R.drawable.ic_delete);
+                    mDeleteBarParams = new LayoutParams(mDeleteBar.getLayoutParams());
+                    mDeleteBarParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+                    mDesktopView.addView(mDeleteBar, mDeleteBarParams);
                     break;
                 case DragEvent.ACTION_DRAG_ENTERED:
                     if (DRAG_DEBUG) {
@@ -112,12 +124,23 @@ public class Desktop extends Activity {
                     if (DRAG_DEBUG) {
                         Log.d(TAG, "ACTION_DRAG_LOCATION");
                     }
+                    mX = (int) event.getX();
+                    if (mX > mDesktopView.getWidth() - mDeleteBar.getWidth()) {
+                        mDeleteBar.setBackgroundColor(getApplicationContext().getResources()
+                                .getColor(R.color.black_full_opaque));
+                        mIsInDeleteZone = true;
+                    } else {
+                        mDeleteBar.setBackgroundColor(getApplicationContext().getResources()
+                                .getColor(R.color.black_half_opaque));
+                        mIsInDeleteZone = false;
+                    }
                     break;
                 case DragEvent.ACTION_DRAG_ENDED:
                     if (DRAG_DEBUG) {
                         Log.d(TAG, "ACTION_DRAG_ENDED");
                     }
                     view.setAlpha(1.0f);
+                    mDesktopView.removeView(mDeleteBar);
                     break;
                 case DragEvent.ACTION_DROP:
                     if (DRAG_DEBUG) {
@@ -128,11 +151,16 @@ public class Desktop extends Activity {
                     String dragItemSource = event.getClipData().getItemAt(0).getText().toString();
                     String packageName = event.getClipData().getItemAt(1).getText().toString();
                     if (dragItemSource.equals("DesktopIcon")) {
-                        mLayoutParams.leftMargin = iconPosCorrection(mX, view.getWidth(), mDesktopView.getWidth());
-                        mLayoutParams.topMargin = iconPosCorrection(mY, view.getHeight(), mDesktopView.getHeight());
-                        mDesktopView.removeView(view);
-                        mDesktopView.addView(view, mLayoutParams);
-                        updateIconsList(packageName, mLayoutParams.leftMargin, mLayoutParams.topMargin);
+                        if (mIsInDeleteZone) {
+                            mDesktopView.removeView(view);
+                            deleteFromIconList(packageName);
+                        } else {
+                            mLayoutParams.leftMargin = iconPosCorrection(mX, view.getWidth(), mDesktopView.getWidth());
+                            mLayoutParams.topMargin = iconPosCorrection(mY, view.getHeight(), mDesktopView.getHeight());
+                            mDesktopView.removeView(view);
+                            mDesktopView.addView(view, mLayoutParams);
+                            updateIconsList(packageName, mLayoutParams.leftMargin, mLayoutParams.topMargin);
+                        }
                     }
                     if (dragItemSource.equals("AppMenuIcon")) {
                         if (iconExists(packageName)) {
@@ -286,6 +314,16 @@ public class Desktop extends Activity {
             if (desktopIcon.getPackage().equals(packageName)) {
                 desktopIcon.setX(newX);
                 desktopIcon.setY(newY);
+                break;
+            }
+        }
+    }
+
+    private void deleteFromIconList(String packageName) {
+        for (DesktopIcon desktopIcon : mDesktopIcons) {
+            if (desktopIcon.getPackage().equals(packageName)) {
+                mDesktopIcons.remove(desktopIcon);
+                break;
             }
         }
     }
