@@ -24,16 +24,24 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.ResolveInfo;
+import android.view.View;
+import android.widget.AdapterView;
 
 public class ApplicationMenu extends ListViewMenu {
 
-    private Context mContext;
+    private final int numberOfRows = 5;
+    public static final String sFreq = "freq";
 
-    public ApplicationMenu(Context context) {
-        super(context, R.style.ApplicationMenuTheme);
+    private Context mContext;
+    private UserDataInterface mUserData;
+
+    public ApplicationMenu(Context context, UserDataInterface userData) {
+        super(context, R.style.ApplicationMenuTheme, userData);
         mContext = context;
+        mUserData = userData;
 
         ArrayList<ListViewMenuItem> listViewItems = fillListViewItems();
+        listViewItems.add(0, addRowToListViewItems(sFreq, mContext.getResources().getString(R.string.freq_menu_title)));
         fillListViewMenu(listViewItems);
     }
 
@@ -47,5 +55,34 @@ public class ApplicationMenu extends ListViewMenu {
             listViewItems.add(createListViewMenuItem(ai));
         }
         return listViewItems;
+    }
+
+    private ListViewMenuItem addRowToListViewItems(String id, String title) {
+        return new ListViewMenuItem(
+                mContext.getResources().getDrawable(android.R.drawable.ic_menu_send), title, id);
+    }
+
+    @Override
+    protected void onMenuItemClick(AdapterView<?> parent, int position) {
+        String packageName = ((ListViewMenuItem) parent.getAdapter()
+                .getItem(position)).getPackageName();
+        if (packageName.equals(sFreq)) {
+            FreqMenu freqMenu = new FreqMenu(mContext, mUserData, numberOfRows);
+            freqMenu.setOnAppListener(getOnAppListener());
+            freqMenu.show();
+            dismiss();
+        } else {
+            super.onMenuItemClick(parent, position);
+        }
+    }
+
+    @Override
+    protected boolean onMenuItemLongClick(AdapterView<?> parent, View view, int position) {
+        String packageName = ((ListViewMenuItem) parent.getAdapter()
+                .getItem(position)).getPackageName();
+        if (!packageName.equals(sFreq)) {
+            return super.onMenuItemLongClick(parent, view, position);
+        }
+        return true;
     }
 }

@@ -43,6 +43,7 @@ public class ListViewMenu extends Dialog {
 
     private ListView mListViewMenu;
     private OnAppStartListener mOnAppListener;
+    private UserDataInterface mUserData;
 
     private Context mContext;
     private Resources mResources;
@@ -50,11 +51,12 @@ public class ListViewMenu extends Dialog {
     protected OnItemClickListener mMenuClick;
     protected OnItemLongClickListener mMenuLongClick;
 
-    public ListViewMenu(Context context, int theme) {
+    public ListViewMenu(Context context, int theme, UserDataInterface userData) {
         super(context, theme);
         mContext = context;
         mResources = context.getResources();
         mPackerManager = context.getPackageManager();
+        mUserData = userData;
 
         initWindowParams();
         setContentView(R.layout.application_menu);
@@ -122,6 +124,7 @@ public class ListViewMenu extends Dialog {
         getOnAppListener().actionPerformed(mPackerManager
                 .getLaunchIntentForPackage(packageName));
         dismiss();
+        mUserData.incAppUsedCounter(packageName);
     }
 
     protected boolean onMenuItemLongClick(AdapterView<?> parent, View view, int position) {

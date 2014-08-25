@@ -65,6 +65,7 @@ public class Desktop extends Activity {
     public static final String sListViewMenuIcon = "ListViewMenuIcon";
     public static final String sMemDesktopIcons = "DesktopIcons";
     public static final String sMemWallpaperPath = "WallpaperPath";
+    public static final String sMemAppsUsed = "AppsUsed";
     private ViewGroup mDesktopView;
     private MultiwindowManager mMultiwindowManager;
     private ApplicationMenu mAppMenu;
@@ -72,6 +73,8 @@ public class Desktop extends Activity {
     private MenuBar mMenu;
     public final int SELECT_PICTURE = 1;
     private ArrayList<DesktopIcon> mDesktopIcons;
+    private ArrayList<AppUsedCounter> mAppsUsed;
+    private UserDataInterface mUserData;
     private String mWallpaperPath;
     private SharedPreferences mAppSharedPrefs;
     private Editor mPrefsEditor;
@@ -185,11 +188,37 @@ public class Desktop extends Activity {
             }
         });
 
-        mAppMenu = new ApplicationMenu(this);
-        mMenu = new MenuBar(this, mAppMenu);
-        mMenu.show();
         loadIcons();
         loadWallpaper();
+        loadFreqUsed();
+
+        mUserData = new UserDataInterface() {
+
+            @Override
+            public void incAppUsedCounter(String packageName) {
+                boolean appFound = true;
+                for (AppUsedCounter appUsed : mAppsUsed) {
+                    if (appUsed.getPackage().equals(packageName)) {
+                        appUsed.incCount();
+                        appFound = false;
+                        break;
+                    }
+                }
+                if (appFound) {
+                    AppUsedCounter appUsed = new AppUsedCounter(packageName);
+                    appUsed.incCount();
+                    mAppsUsed.add(appUsed);
+                }
+            }
+
+            @Override
+            public ArrayList<AppUsedCounter> getAppsUsedList() {
+                return mAppsUsed;
+            }
+        };
+        mAppMenu = new ApplicationMenu(this, mUserData);
+        mMenu = new MenuBar(this, mAppMenu);
+        mMenu.show();
 
         findViewById(R.id.browseGallery).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -208,6 +237,7 @@ public class Desktop extends Activity {
         String json = mGson.toJson(mDesktopIcons);
         mPrefsEditor.putString(sMemDesktopIcons, json);
         mPrefsEditor.putString(sMemWallpaperPath, mWallpaperPath);
+        mPrefsEditor.putString(sMemAppsUsed, mGson.toJson(mAppsUsed));
         mPrefsEditor.commit();
     }
 
@@ -255,6 +285,7 @@ public class Desktop extends Activity {
                         .getPackageManager()
                         .getLaunchIntentForPackage(packageName);
                 mMultiwindowManager.startActivity(launchIntent);
+                mUserData.incAppUsedCounter(packageName);
             }
         });
         desktopIcon.setOnLongClickListener(new OnLongClickListener() {
@@ -287,6 +318,16 @@ public class Desktop extends Activity {
             }
         } else {
             mDesktopIcons = new ArrayList<DesktopIcon>();
+        }
+    }
+
+    private void loadFreqUsed() {
+        String json = mAppSharedPrefs.getString(sMemAppsUsed, "");
+        Type type = new TypeToken<ArrayList<AppUsedCounter>>(){}.getType();
+        if (mGson.fromJson(json, type) != null) {
+            mAppsUsed = mGson.fromJson(json, type);
+        } else {
+            mAppsUsed = new ArrayList<AppUsedCounter>();
         }
     }
 

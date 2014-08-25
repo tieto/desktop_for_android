@@ -21,6 +21,7 @@ import java.util.List;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -48,6 +49,11 @@ public class ListViewMenuAdapter extends ArrayAdapter<ListViewMenuItem> {
 
         imageView.setImageDrawable(rowItem.getImage());
         txtTitle.setText(rowItem.getTitle());
+        if (rowItem.getPackageName().equals(ApplicationMenu.sFreq)) {
+            txtTitle.setTypeface(null, Typeface.BOLD);
+        } else {
+            txtTitle.setTypeface(null, Typeface.NORMAL);
+        }
 
         return convertView;
     }

@@ -23,5 +23,7 @@
     <string name="icon_already_on_desktop">This icon is already on desktop.</string>
     <string name="align_to_left">Align to left</string>
     <string name="align_to_right">Align to right</string>
+    <string name="freq_menu_title">Frequently Used</string>
+    <string name="freq_menu_description">Frequently Used Apps</string>
 
 </resources>
