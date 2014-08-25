@@ -22,4 +22,5 @@ import java.util.ArrayList;
 public interface UserDataInterface {
     void incAppUsedCounter(String packageName);
     ArrayList<AppUsedCounter> getAppsUsedList();
+    ArrayList<String> getAppsFavList();
 }

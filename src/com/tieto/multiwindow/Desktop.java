@@ -66,6 +66,7 @@ public class Desktop extends Activity {
     public static final String sMemDesktopIcons = "DesktopIcons";
     public static final String sMemWallpaperPath = "WallpaperPath";
     public static final String sMemAppsUsed = "AppsUsed";
+    public static final String sMemAppsFav = "AppsFav";
     private ViewGroup mDesktopView;
     private MultiwindowManager mMultiwindowManager;
     private ApplicationMenu mAppMenu;
@@ -74,6 +75,7 @@ public class Desktop extends Activity {
     public final int SELECT_PICTURE = 1;
     private ArrayList<DesktopIcon> mDesktopIcons;
     private ArrayList<AppUsedCounter> mAppsUsed;
+    private ArrayList<String> mAppsFav;
     private UserDataInterface mUserData;
     private String mWallpaperPath;
     private SharedPreferences mAppSharedPrefs;
@@ -191,6 +193,7 @@ public class Desktop extends Activity {
         loadIcons();
         loadWallpaper();
         loadFreqUsed();
+        loadFavApps();
 
         mUserData = new UserDataInterface() {
 
@@ -215,6 +218,11 @@ public class Desktop extends Activity {
             public ArrayList<AppUsedCounter> getAppsUsedList() {
                 return mAppsUsed;
             }
+
+            @Override
+            public ArrayList<String> getAppsFavList() {
+                return mAppsFav;
+            }
         };
         mAppMenu = new ApplicationMenu(this, mUserData);
         mMenu = new MenuBar(this, mAppMenu);
@@ -238,6 +246,7 @@ public class Desktop extends Activity {
         mPrefsEditor.putString(sMemDesktopIcons, json);
         mPrefsEditor.putString(sMemWallpaperPath, mWallpaperPath);
         mPrefsEditor.putString(sMemAppsUsed, mGson.toJson(mAppsUsed));
+        mPrefsEditor.putString(sMemAppsFav, mGson.toJson(mAppsFav));
         mPrefsEditor.commit();
     }
 
@@ -328,6 +337,16 @@ public class Desktop extends Activity {
             mAppsUsed = mGson.fromJson(json, type);
         } else {
             mAppsUsed = new ArrayList<AppUsedCounter>();
+        }
+    }
+
+    private void loadFavApps() {
+        String json = mAppSharedPrefs.getString(sMemAppsFav, "");
+        Type type = new TypeToken<ArrayList<String>>(){}.getType();
+        if (mGson.fromJson(json, type) != null) {
+            mAppsFav = mGson.fromJson(json, type);
+        } else {
+            mAppsFav = new ArrayList<String>();
         }
     }
 

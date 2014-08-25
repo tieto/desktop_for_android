@@ -25,5 +25,11 @@
     <string name="align_to_right">Align to right</string>
     <string name="freq_menu_title">Frequently Used</string>
     <string name="freq_menu_description">Frequently Used Apps</string>
+    <string name="fav_menu_title">Favorites</string>
+    <string name="fav_menu_description">Favorite Apps</string>
+    <string name="app_already_on_fav_list">App already on Favorite List</string>
+    <string name="failed_to_add_to_fav_list">Failed to add application to Favorite List</string>
+    <string name="added_app_to_fav_list">"Added %1$s to Favorite List"</string>
+    <string name="deleted_from_fav_list">"Deleted %1$s from Favorite List"</string>
 
 </resources>

@@ -49,7 +49,8 @@ public class ListViewMenuAdapter extends ArrayAdapter<ListViewMenuItem> {
 
         imageView.setImageDrawable(rowItem.getImage());
         txtTitle.setText(rowItem.getTitle());
-        if (rowItem.getPackageName().equals(ApplicationMenu.sFreq)) {
+        if (rowItem.getPackageName().equals(ApplicationMenu.sFreq)
+                || rowItem.getPackageName().equals(ApplicationMenu.sFav)) {
             txtTitle.setTypeface(null, Typeface.BOLD);
         } else {
             txtTitle.setTypeface(null, Typeface.NORMAL);
