@@ -78,6 +78,20 @@ public class AppButton extends RelativeLayout {
                 }
             }
         });
+
+        buttonLayout.setOnLongClickListener(new OnLongClickListener() {
+            ButtonContextMenu popUp = new ButtonContextMenu(getContext(), mAppInfo);
+
+            @Override
+            public boolean onLongClick(View v) {
+                int[] location = new int[2];
+                v.getLocationOnScreen(location);
+
+                popUp.show(location[0], (int) (location[1] / 2)
+                        - MenuBar.HEIGHT);
+                return false;
+            }
+        });
         addView(buttonLayout);
     }
     /**
