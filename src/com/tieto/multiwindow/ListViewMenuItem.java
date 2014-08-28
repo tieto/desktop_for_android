@@ -19,12 +19,12 @@ package com.tieto.multiwindow;
 
 import android.graphics.drawable.Drawable;
 
-public class ApplicationMenuItem {
+public class ListViewMenuItem {
     private Drawable mIcon;
     private String mTitle;
     private String mPackageName;
 
-    public ApplicationMenuItem(Drawable icon, String title, String packageName) {
+    public ListViewMenuItem(Drawable icon, String title, String packageName) {
         mIcon = icon;
         mTitle = title;
         mPackageName = packageName;
