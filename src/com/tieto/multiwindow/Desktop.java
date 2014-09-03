@@ -61,6 +61,10 @@ import com.google.gson.reflect.TypeToken;
 
 public class Desktop extends Activity {
 
+    public static final String sDesktopIcon = "DesktopIcon";
+    public static final String sListViewMenuIcon = "ListViewMenuIcon";
+    public static final String sMemDesktopIcons = "DesktopIcons";
+    public static final String sMemWallpaperPath = "WallpaperPath";
     private ViewGroup mDesktopView;
     private MultiwindowManager mMultiwindowManager;
     private ApplicationMenu mAppMenu;
@@ -150,7 +154,7 @@ public class Desktop extends Activity {
                     mY = (int) event.getY();
                     String dragItemSource = event.getClipData().getItemAt(0).getText().toString();
                     String packageName = event.getClipData().getItemAt(1).getText().toString();
-                    if (dragItemSource.equals("DesktopIcon")) {
+                    if (dragItemSource.equals(sDesktopIcon)) {
                         if (mIsInDeleteZone) {
                             mDesktopView.removeView(view);
                             deleteFromIconList(packageName);
@@ -162,7 +166,7 @@ public class Desktop extends Activity {
                             updateIconsList(packageName, mLayoutParams.leftMargin, mLayoutParams.topMargin);
                         }
                     }
-                    if (dragItemSource.equals("AppMenuIcon")) {
+                    if (dragItemSource.equals(sListViewMenuIcon)) {
                         if (iconExists(packageName)) {
                             Toast.makeText(getBaseContext(), R.string.icon_already_on_desktop,
                                     Toast.LENGTH_SHORT).show();
@@ -202,8 +206,8 @@ public class Desktop extends Activity {
         mMenu.maximizeMinimizedWindows();
         super.onStop();
         String json = mGson.toJson(mDesktopIcons);
-        mPrefsEditor.putString("DesktopIcons", json);
-        mPrefsEditor.putString("WallpaperPath", mWallpaperPath);
+        mPrefsEditor.putString(sMemDesktopIcons, json);
+        mPrefsEditor.putString(sMemWallpaperPath, mWallpaperPath);
         mPrefsEditor.commit();
     }
 
@@ -211,7 +215,7 @@ public class Desktop extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == SELECT_PICTURE) {
             if (resultCode == RESULT_OK) {
-                mPrefsEditor.putString("WallpaperPath", getPath(data.getData()));
+                mPrefsEditor.putString(sMemWallpaperPath, getPath(data.getData()));
                 mPrefsEditor.commit();
                 loadWallpaper();
             }
@@ -257,7 +261,7 @@ public class Desktop extends Activity {
 
             @Override
             public boolean onLongClick(View v) {
-                ClipData.Item iconType = new ClipData.Item("DesktopIcon");
+                ClipData.Item iconType = new ClipData.Item(sDesktopIcon);
                 ClipData.Item packName = new ClipData.Item((CharSequence) packageName);
                 String[] clipDescription = { ClipDescription.MIMETYPE_TEXT_PLAIN };
                 ClipData dragData = new ClipData("", clipDescription, iconType);
@@ -274,7 +278,7 @@ public class Desktop extends Activity {
     }
 
     private void loadIcons() {
-        String json = mAppSharedPrefs.getString("DesktopIcons", "");
+        String json = mAppSharedPrefs.getString(sMemDesktopIcons, "");
         Type type = new TypeToken<ArrayList<DesktopIcon>>(){}.getType();
         if (mGson.fromJson(json, type) != null) {
             mDesktopIcons = mGson.fromJson(json, type);
@@ -287,7 +291,7 @@ public class Desktop extends Activity {
     }
 
     private void loadWallpaper() {
-        mWallpaperPath = mAppSharedPrefs.getString("WallpaperPath", "");
+        mWallpaperPath = mAppSharedPrefs.getString(sMemWallpaperPath, "");
         File file = new File(mWallpaperPath);
         if (file.exists()) {
             Bitmap imgBitmap = BitmapFactory.decodeFile(mWallpaperPath);

@@ -42,7 +42,7 @@ public class ListViewMenuItem {
         return mPackageName;
     }
 
-    public void setDesc(String packageName) {
+    public void setPackageName(String packageName) {
         mPackageName = packageName;
     }
 

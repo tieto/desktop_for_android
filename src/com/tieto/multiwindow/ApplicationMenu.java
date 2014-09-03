@@ -20,73 +20,32 @@ package com.tieto.multiwindow;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.content.ClipData;
-import android.content.ClipDescription;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.AdapterView.OnItemLongClickListener;
-import android.widget.ImageView;
-import android.widget.ListView;
 
 public class ApplicationMenu extends ListViewMenu {
 
-    private final int mDragShadowSize = 150;
-    private final PackageManager mPackerManager;
+    private Context mContext;
 
-    public ApplicationMenu(final Context context) {
+    public ApplicationMenu(Context context) {
         super(context, R.style.ApplicationMenuTheme);
+        mContext = context;
 
-        mPackerManager = getContext().getPackageManager();
-        List<ResolveInfo> mAppInfo = mPackerManager.queryIntentActivities(
-                new Intent(Intent.ACTION_MAIN, null)
-                        .addCategory(Intent.CATEGORY_LAUNCHER), 0);
-
-        ArrayList<ListViewMenuItem> listViewItems = new ArrayList<ListViewMenuItem>();
-        for (ResolveInfo singleAppInfo : mAppInfo) {
-            ApplicationInfo ai = singleAppInfo.activityInfo.applicationInfo;
-            listViewItems.add(new ListViewMenuItem(
-                    mPackerManager.getApplicationIcon(ai),
-                    mPackerManager.getApplicationLabel(ai).toString(),
-                    ai.packageName));
-        }
+        ArrayList<ListViewMenuItem> listViewItems = fillListViewItems();
         fillListViewMenu(listViewItems);
+    }
 
-        ListView listView = getListViewMenu();
-        listView.setOnItemClickListener(new OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> parent, final View view,
-                    int position, long id) {
-                ListViewMenuItem menuItem = (ListViewMenuItem) parent.getAdapter().getItem(position);
-                getOnAppListener().actionPerformed(mPackerManager
-                        .getLaunchIntentForPackage(menuItem.getPackageName()));
-                dismiss();
-            }
-        });
-        listView.setOnItemLongClickListener(new OnItemLongClickListener() {
-
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view,
-                    int position, long id) {
-                ListViewMenuItem menuItem = (ListViewMenuItem) parent.getAdapter().getItem(position);
-                ClipData.Item iconType = new ClipData.Item("AppMenuIcon");
-                ClipData.Item packageName = new ClipData.Item(menuItem.getPackageName());
-                String[] clipDescription = { ClipDescription.MIMETYPE_TEXT_PLAIN };
-                ClipData dragData = new ClipData("", clipDescription, iconType);
-                dragData.addItem(packageName);
-
-                ImageView dragIcon = (ImageView) view.findViewById(R.id.icon);
-                AppMenuDragShadowBuilder shadowBuilder = new AppMenuDragShadowBuilder(dragIcon, mDragShadowSize, mDragShadowSize);
-                view.startDrag(dragData, shadowBuilder, view, 0);
-
-                return true;
-            }
-        });
+    private ArrayList<ListViewMenuItem> fillListViewItems() {
+        ArrayList<ListViewMenuItem> listViewItems = new ArrayList<ListViewMenuItem>();
+        List<ResolveInfo> resolveInfoList = mContext.getPackageManager()
+                .queryIntentActivities(new Intent(Intent.ACTION_MAIN, null)
+                        .addCategory(Intent.CATEGORY_LAUNCHER), 0);
+        for (ResolveInfo resolveInfo : resolveInfoList) {
+            ApplicationInfo ai = resolveInfo.activityInfo.applicationInfo;
+            listViewItems.add(createListViewMenuItem(ai));
+        }
+        return listViewItems;
     }
 }

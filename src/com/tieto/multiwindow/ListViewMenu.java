@@ -18,35 +18,63 @@
 package com.tieto.multiwindow;
 
 import java.util.ArrayList;
-import java.util.List;
 
-import android.app.Activity;
 import android.app.Dialog;
+import android.content.ClipData;
+import android.content.ClipDescription;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.ArrayAdapter;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.TextView;
 
 public class ListViewMenu extends Dialog {
 
+    private final int mDragShadowSize = 150;
     private final int mListViewMenuWidth = 700;
     private final int mListViewMenuVerticalOffset = 50;
+
     private ListView mListViewMenu;
     private OnAppStartListener mOnAppListener;
+
     private Context mContext;
+    private Resources mResources;
+    private PackageManager mPackerManager;
+    protected OnItemClickListener mMenuClick;
+    protected OnItemLongClickListener mMenuLongClick;
 
     public ListViewMenu(Context context, int theme) {
         super(context, theme);
         mContext = context;
+        mResources = context.getResources();
+        mPackerManager = context.getPackageManager();
 
         initWindowParams();
+        setContentView(R.layout.application_menu);
         mListViewMenu = (ListView) findViewById(R.id.listview);
+        mListViewMenu.setOnItemClickListener(new OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view,
+                    int position, long id) {
+                onMenuItemClick(parent, position);
+            }
+        });
+        mListViewMenu.setOnItemLongClickListener(new OnItemLongClickListener() {
+
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view,
+                    int position, long id) {
+                return onMenuItemLongClick(parent, view, position);
+            }
+        });
     }
 
     private void initWindowParams() {
@@ -62,12 +90,18 @@ public class ListViewMenu extends Dialog {
         getWindow().getAttributes().width = mListViewMenuWidth;
         getWindow().getAttributes().height = useableScreenHeight
                 - MenuBar.HEIGHT - mListViewMenuVerticalOffset;
-        setContentView(R.layout.application_menu);
     }
 
     public void fillListViewMenu(ArrayList<ListViewMenuItem> listViewItems) {
-        ListViewAdapter adapter = new ListViewAdapter(mContext, R.layout.application_menu_item, listViewItems);
+        ListViewMenuAdapter adapter = new ListViewMenuAdapter(mContext, R.layout.application_menu_item, listViewItems);
         mListViewMenu.setAdapter(adapter);
+    }
+
+    public ListViewMenuItem createListViewMenuItem(ApplicationInfo ai) {
+        return new ListViewMenuItem(
+                mPackerManager.getApplicationIcon(ai),
+                mPackerManager.getApplicationLabel(ai).toString(),
+                ai.packageName);
     }
 
     public ListView getListViewMenu() {
@@ -82,28 +116,28 @@ public class ListViewMenu extends Dialog {
         this.mOnAppListener = onAppListener;
     }
 
-    private class ListViewAdapter extends ArrayAdapter<ListViewMenuItem> {
+    protected void onMenuItemClick(AdapterView<?> parent, int position) {
+        String packageName = ((ListViewMenuItem) parent.getAdapter()
+                .getItem(position)).getPackageName();
+        getOnAppListener().actionPerformed(mPackerManager
+                .getLaunchIntentForPackage(packageName));
+        dismiss();
+    }
 
-        public ListViewAdapter(Context context, int resourceId, List<ListViewMenuItem> items) {
-            super(context, resourceId, items);
-        }
+    protected boolean onMenuItemLongClick(AdapterView<?> parent, View view, int position) {
+        String packageName = ((ListViewMenuItem) parent.getAdapter()
+                .getItem(position)).getPackageName();
+        ClipData.Item clipIconType = new ClipData.Item(Desktop.sListViewMenuIcon);
+        ClipData.Item clipPackageName = new ClipData.Item(packageName);
+        String[] clipDescription = { ClipDescription.MIMETYPE_TEXT_PLAIN };
+        ClipData dragData = new ClipData("", clipDescription, clipIconType);
+        dragData.addItem(clipPackageName);
 
-        public View getView(int position, View convertView, ViewGroup parent) {
+        ImageView dragIcon = (ImageView) view.findViewById(R.id.icon);
+        ListViewMenuItemDSB shadowBuilder = new ListViewMenuItemDSB(dragIcon,
+                mDragShadowSize, mDragShadowSize);
+        view.startDrag(dragData, shadowBuilder, view, 0);
 
-            if (convertView == null) {
-                LayoutInflater inflater = (LayoutInflater) getContext()
-                        .getSystemService(Activity.LAYOUT_INFLATER_SERVICE);
-                convertView = inflater.inflate(R.layout.application_menu_item, null);
-            }
-
-            ListViewMenuItem rowItem = getItem(position);
-            ImageView imageView = (ImageView) convertView.findViewById(R.id.icon);
-            TextView txtTitle = (TextView) convertView.findViewById(R.id.title);
-
-            imageView.setImageDrawable(rowItem.getImage());
-            txtTitle.setText(rowItem.getTitle());
-
-            return convertView;
-        }
+        return true;
     }
 }
