@@ -225,8 +225,10 @@ public class Desktop extends Activity {
             }
         };
         mAppMenu = new ApplicationMenu(this, mUserData);
-        mMenu = new MenuBar(this, mAppMenu);
-        mMenu.show();
+        if (mMenu == null) {
+            mMenu = new MenuBar(this, mAppMenu);
+            mMenu.show();
+        }
 
         findViewById(R.id.browseGallery).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -248,6 +250,15 @@ public class Desktop extends Activity {
         mPrefsEditor.putString(sMemAppsUsed, mGson.toJson(mAppsUsed));
         mPrefsEditor.putString(sMemAppsFav, mGson.toJson(mAppsFav));
         mPrefsEditor.commit();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (mMenu != null) {
+            mMenu.dismiss();
+            mMenu = null;
+        }
+        super.onDestroy();
     }
 
     @Override
