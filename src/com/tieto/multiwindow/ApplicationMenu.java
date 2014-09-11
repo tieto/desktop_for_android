@@ -26,6 +26,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
+import android.util.Log;
 import android.view.DragEvent;
 import android.view.View;
 import android.view.View.OnDragListener;
@@ -38,6 +39,7 @@ public class ApplicationMenu extends ListViewMenu {
     private final int numberOfRows = 5;
     public static final String sFreq = "freq";
     public final static String sFav = "fav";
+    public final boolean SCROLL_DEBUG = false;
 
     private Context mContext;
     private UserDataInterface mUserData;
@@ -55,21 +57,30 @@ public class ApplicationMenu extends ListViewMenu {
         ListView listViewMenu = getListViewMenu();
         listViewMenu.setOnDragListener(new OnDragListener() {
 
-            private View mFavRow;
+            private int mFavRowPos;
             private boolean mDropOnFav = false;
             private Resources mResources = mContext.getResources();
             private PackageManager mPackerManager = mContext
                     .getPackageManager();
+            private ListView mListView;
+            private int mXPosition;
+            private int mYPosition;
+            private final int NO_COLOR = 0x0;
+            private final int LAST_SCROLL_NOSCROLL = 0;
+            private final int LAST_SCROLL_UP = 1;
+            private final int LAST_SCROLL_DOWN = 2;
+            private int mLastScrollAction;
 
             @Override
             public boolean onDrag(View v, DragEvent event) {
+                mListView = (ListView) v;
                 switch (event.getAction()) {
                 case DragEvent.ACTION_DRAG_STARTED:
-                    int itemsCount = ((ListView) v).getCount();
+                    int itemsCount = mListView.getCount();
                     for (int i = 0; i< itemsCount; i++) {
-                        ListViewMenuItem item = (ListViewMenuItem) ((ListView) v).getItemAtPosition(i);
+                        ListViewMenuItem item = (ListViewMenuItem) mListView.getItemAtPosition(i);
                         if (item.getPackageName().equals(sFav)) {
-                            mFavRow = ((ListView) v).getChildAt(i);
+                            mFavRowPos = i;
                             break;
                         }
                     }
@@ -77,24 +88,27 @@ public class ApplicationMenu extends ListViewMenu {
                 case DragEvent.ACTION_DRAG_ENTERED:
                     break;
                 case DragEvent.ACTION_DRAG_EXITED:
-                    mFavRow.setBackground(null);
+                    hoverItemBackground(mFavRowPos, NO_COLOR);
                     mDropOnFav = false;
                     break;
                 case DragEvent.ACTION_DRAG_LOCATION:
-                    int position = ((ListView) v).pointToPosition((int) event.getX(), (int) event.getY());
+                    mXPosition = (int) event.getX();
+                    mYPosition = (int) event.getY();
+                    int position = mListView.pointToPosition(mXPosition, mYPosition);
+                    dragScrollByItemPos(position);
                     if (position != -1) {
-                        ListViewMenuItem item = (ListViewMenuItem) ((ListView) v).getItemAtPosition(position);
+                        ListViewMenuItem item = (ListViewMenuItem) mListView.getItemAtPosition(position);
                         if (item.getPackageName().equals(sFav)) {
-                            mFavRow.setBackgroundColor(mContext.getResources().getColor(android.R.color.holo_blue_dark));
+                            hoverItemBackground(mFavRowPos, mResources.getColor(android.R.color.holo_blue_dark));
                             mDropOnFav = true;
                         } else {
-                            mFavRow.setBackground(null);
+                            hoverItemBackground(mFavRowPos, NO_COLOR);
                             mDropOnFav = false;
                         }
                     }
                     break;
                 case DragEvent.ACTION_DRAG_ENDED:
-                    mFavRow.setBackground(null);
+                    hoverItemBackground(mFavRowPos, NO_COLOR);
                     break;
                 case DragEvent.ACTION_DROP:
                     if (mDropOnFav) {
@@ -127,6 +141,100 @@ public class ApplicationMenu extends ListViewMenu {
                     break;
                 }
                 return true;
+            }
+
+            private void hoverItemBackground (int position, int color) {
+                if (position >= mListView.getFirstVisiblePosition()
+                        && position <= mListView.getFirstVisiblePosition()) {
+                    View item = mListView.getChildAt(position);
+                    item.setBackgroundColor(color);
+                }
+            }
+
+            /**
+             * TODO separate scrolling during drag from ACTION_DRAG_LOCATION event
+             */
+            private void dragScrollByItemPos(int position) {
+                int firstVisibleItemPosition = mListView.getFirstVisiblePosition();
+                int lastVisibleItemPosition = mListView.getLastVisiblePosition();
+
+                if ((position == firstVisibleItemPosition
+                        || position == firstVisibleItemPosition + 1)
+                        && position != 0) {
+                    mListView.smoothScrollToPosition(
+                                    firstVisibleItemPosition - 1);
+                            mLastScrollAction = LAST_SCROLL_UP;
+                } else if ((position == lastVisibleItemPosition
+                        || position == lastVisibleItemPosition - 1)
+                        && position < mListView.getCount()) {
+                    mListView.smoothScrollToPosition(
+                                    lastVisibleItemPosition + 1);
+                            mLastScrollAction = LAST_SCROLL_DOWN;
+                } else if (position == -1) {
+                    if (SCROLL_DEBUG) {
+                        Log.d("ScrollDrag", "No position (separate line)");
+                    }
+                    if (mLastScrollAction == LAST_SCROLL_UP) {
+                        if (SCROLL_DEBUG) {
+                            Log.d("ScrollDrag", "Last time scroll UP");
+                        }
+                        if (firstVisibleItemPosition > 0) {
+                            mListView.smoothScrollToPosition(
+                                    firstVisibleItemPosition - 1);
+                        } else {
+                            mListView.smoothScrollToPosition(
+                                    firstVisibleItemPosition);
+                        }
+                    } else if (mLastScrollAction == LAST_SCROLL_DOWN) {
+                        if (SCROLL_DEBUG) {
+                            Log.d("ScrollDrag", "Last time scroll DOWN)");
+                        }
+                        if (lastVisibleItemPosition < mListView.getCount()) {
+                            mListView.smoothScrollToPosition(
+                                    lastVisibleItemPosition + 1);
+                        } else {
+                            mListView.smoothScrollToPosition(
+                                    lastVisibleItemPosition);
+                        }
+                    } else {
+                        if (SCROLL_DEBUG) {
+                            Log.d("ScrollDrag", "No recent scroll");
+                        }
+                        mLastScrollAction = LAST_SCROLL_NOSCROLL;
+                    }
+                } else {
+                    if (SCROLL_DEBUG) {
+                        Log.d("ScrollDrag", "Out of scrolling area");
+                    }
+                    mLastScrollAction = LAST_SCROLL_NOSCROLL;
+                }
+            }
+
+            /**
+             * TODO separate scrolling during drag from ACTION_DRAG_LOCATION event
+             */
+            private void dragScrollByTouchPos() {
+                int listViewHeight = mListView.getHeight();
+                int topSlowScroll = (int) (0.3 * listViewHeight);
+                int botSlowScroll = (int) (0.7 * listViewHeight);
+                int topFastScroll = (int) (0.15 * listViewHeight);
+                int botFastScroll = (int) (0.85 * listViewHeight);
+                int ratio = 10;
+                int duration = 100;
+
+                if (mYPosition < topSlowScroll) {
+                    if (mYPosition < topFastScroll) {
+                        mListView.smoothScrollBy(-ratio * 4, duration);
+                    } else {
+                        mListView.smoothScrollBy(-ratio, duration);
+                    }
+                } else if (mYPosition > botSlowScroll) {
+                    if (mYPosition > botFastScroll) {
+                        mListView.smoothScrollBy(ratio * 4, duration);
+                    } else {
+                        mListView.smoothScrollBy(ratio, duration);
+                    }
+                }
             }
         });
     }
