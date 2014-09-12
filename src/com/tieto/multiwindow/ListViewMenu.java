@@ -26,8 +26,11 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
+import android.util.Log;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnTouchListener;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -48,8 +51,10 @@ public class ListViewMenu extends Dialog {
     private Context mContext;
     private Resources mResources;
     private PackageManager mPackerManager;
-    protected OnItemClickListener mMenuClick;
-    protected OnItemLongClickListener mMenuLongClick;
+
+    protected int mMouseButton;
+    protected int mMouseClickX;
+    protected int mMouseClickY;
 
     public ListViewMenu(Context context, int theme, UserDataInterface userData) {
         super(context, theme);
@@ -61,6 +66,23 @@ public class ListViewMenu extends Dialog {
         initWindowParams();
         setContentView(R.layout.application_menu);
         mListViewMenu = (ListView) findViewById(R.id.listview);
+
+        /**
+         * This onTouch event is added just to obtain information about device
+         * that performed Click or LongClick and raw position of event.
+         */
+        mListViewMenu.setOnTouchListener(new OnTouchListener() {
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    mMouseButton = event.getButtonState();
+                    mMouseClickX = (int) event.getRawX();
+                    mMouseClickY = (int) event.getRawY();
+                }
+                return false;
+            }
+        });
         mListViewMenu.setOnItemClickListener(new OnItemClickListener() {
 
             @Override

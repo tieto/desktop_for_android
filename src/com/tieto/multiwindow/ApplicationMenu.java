@@ -28,6 +28,7 @@ import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
 import android.util.Log;
 import android.view.DragEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnDragListener;
 import android.widget.AdapterView;
@@ -258,9 +259,39 @@ public class ApplicationMenu extends ListViewMenu {
 
     @Override
     protected void onMenuItemClick(AdapterView<?> parent, int position) {
-        String packageName = ((ListViewMenuItem) parent.getAdapter()
+        final String packageName = ((ListViewMenuItem) parent.getAdapter()
                 .getItem(position)).getPackageName();
-        if (packageName.equals(sFreq)) {
+        boolean isRightClick = (mMouseButton == MotionEvent.BUTTON_SECONDARY);
+        if (isRightClick) {
+            if (!packageName.equals(sFreq) && !packageName.equals(sFav)) {
+                final RightClickContextMenu contextMenu = new RightClickContextMenu(
+                        mContext, mMouseClickX, mMouseClickY);
+                contextMenu.addButton(mContext.getResources().getString(
+                        R.string.add_icon_to_favorites),
+                        new View.OnClickListener() {
+
+                    @Override
+                    public void onClick(View v) {
+                        boolean appOnFavList = false;
+                        for (String appUsed : mUserData.getAppsFavList()) {
+                            if (appUsed.equals(packageName)) {
+                                appOnFavList = true;
+                                break;
+                            }
+                        }
+                        if (appOnFavList) {
+                            Toast.makeText(mContext, mContext.getResources().getString(
+                                    R.string.app_already_on_fav_list),
+                                    Toast.LENGTH_SHORT).show();
+                        } else {
+                            mUserData.getAppsFavList().add(packageName);
+                        }
+                        contextMenu.dismiss();
+                    }
+                });
+                contextMenu.show();
+            }
+        } else if (packageName.equals(sFreq)) {
             FreqMenu freqMenu = new FreqMenu(mContext, mUserData, numberOfRows);
             freqMenu.setOnAppListener(getOnAppListener());
             freqMenu.show();
@@ -277,10 +308,12 @@ public class ApplicationMenu extends ListViewMenu {
 
     @Override
     protected boolean onMenuItemLongClick(AdapterView<?> parent, View view, int position) {
-        String packageName = ((ListViewMenuItem) parent.getAdapter()
-                .getItem(position)).getPackageName();
-        if (!packageName.equals(sFreq) && !packageName.equals(sFav)) {
-            return super.onMenuItemLongClick(parent, view, position);
+        if (mMouseButton != MotionEvent.BUTTON_SECONDARY) {
+            String packageName = ((ListViewMenuItem) parent.getAdapter()
+                    .getItem(position)).getPackageName();
+            if (!packageName.equals(sFreq) && !packageName.equals(sFav)) {
+                return super.onMenuItemLongClick(parent, view, position);
+            }
         }
         return true;
     }

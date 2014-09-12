@@ -21,6 +21,7 @@ import java.util.ArrayList;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Toast;
@@ -55,7 +56,35 @@ public class FavMenu extends ListViewMenu {
     }
 
     @Override
+    protected void onMenuItemClick(final AdapterView<?> parent, final int position) {
+        if (mMouseButton == MotionEvent.BUTTON_SECONDARY) {
+            final RightClickContextMenu contextMenu = new RightClickContextMenu(
+                    mContext, mMouseClickX, mMouseClickY);
+            contextMenu.addButton(mContext.getResources().getString(
+                    R.string.remove_icon_from_menu),
+                    new View.OnClickListener() {
+
+                @Override
+                public void onClick(View v) {
+                    deleteItemFromMenu(parent, position);
+                    contextMenu.dismiss();
+                }
+            });
+            contextMenu.show();
+        } else {
+            super.onMenuItemClick(parent, position);
+        }
+    }
+
+    @Override
     protected boolean onMenuItemLongClick(AdapterView<?> parent, View view, int position) {
+        if (mMouseButton != MotionEvent.BUTTON_SECONDARY) {
+            deleteItemFromMenu(parent, position);
+        }
+        return true;
+    }
+
+    private void deleteItemFromMenu(AdapterView<?> parent, int position) {
         ListViewMenuItem item = (ListViewMenuItem) parent.getItemAtPosition(position);
         String packageName = item.getPackageName();
         for (String appToDelete : mUserData.getAppsFavList()) {
@@ -70,6 +99,5 @@ public class FavMenu extends ListViewMenu {
                 break;
             }
         }
-        return true;
     }
 }

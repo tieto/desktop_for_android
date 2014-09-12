@@ -45,12 +45,13 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.DragEvent;
 import android.view.LayoutInflater;
-import android.view.Menu;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.DragShadowBuilder;
 import android.view.View.OnClickListener;
 import android.view.View.OnDragListener;
 import android.view.View.OnLongClickListener;
+import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -85,11 +86,16 @@ public class Desktop extends Activity {
     private Editor mPrefsEditor;
     private Gson mGson;
     private Rect mMaximizedSize;
+    private int mMouseButton;
+    private int mMouseClickX;
+    private int mMouseClickY;
+    private Context mContext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_desktop);
+        mContext = this;
         mAppSharedPrefs = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
         mPrefsEditor = mAppSharedPrefs.edit();
         mGson = new Gson();
@@ -98,7 +104,7 @@ public class Desktop extends Activity {
         mMaximizedSize = new Rect(0, getResources().getDimensionPixelSize(
                 resourceId), metrics.widthPixels, metrics.heightPixels
                 - MenuBar.HEIGHT);
-        mMultiwindowManager = new MultiwindowManager(getBaseContext());
+        mMultiwindowManager = new MultiwindowManager(mContext);
         mMultiwindowManager.setMaximizedWindowSize(mMaximizedSize);
         mDesktopView = (ViewGroup) findViewById(R.id.desktop);
         getWindow().getDecorView().setOnDragListener(new OnDragListener() {
@@ -108,7 +114,7 @@ public class Desktop extends Activity {
             private View view;
             private LinearLayout mDeleteBar;
             private LayoutParams mDeleteBarParams;
-            private LayoutInflater mLayoutInflater = (LayoutInflater) getBaseContext()
+            private LayoutInflater mLayoutInflater = (LayoutInflater) mContext
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             private boolean mIsInDeleteZone;
 
@@ -183,7 +189,7 @@ public class Desktop extends Activity {
                     }
                     if (dragItemSource.equals(sListViewMenuIcon)) {
                         if (iconExists(packageName)) {
-                            Toast.makeText(getBaseContext(), R.string.icon_already_on_desktop,
+                            Toast.makeText(mContext, R.string.icon_already_on_desktop,
                                     Toast.LENGTH_SHORT).show();
                         } else {
                             View handler = addIconToDesktop(mX, mY, packageName, true);
@@ -292,9 +298,8 @@ public class Desktop extends Activity {
 
     public View addIconToDesktop(int x, int y, final String packageName, boolean dropAction) {
         final String TAG = "DESKTOP_DRAG_EVENT";
-        LayoutInflater li = (LayoutInflater) getBaseContext()
-                .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        RelativeLayout desktopIcon = (RelativeLayout) li.inflate(R.layout.desktop_icon, mDesktopView, false);
+        LayoutInflater li = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        final RelativeLayout desktopIcon = (RelativeLayout) li.inflate(R.layout.desktop_icon, mDesktopView, false);
 
         try {
             ApplicationInfo app = getPackageManager().getApplicationInfo(packageName, 0);
@@ -315,30 +320,60 @@ public class Desktop extends Activity {
         desktopIcon.setLayoutParams(lp);
         mDesktopView.addView(desktopIcon);
 
+        desktopIcon.setOnTouchListener(new OnTouchListener() {
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    mMouseButton = event.getButtonState();
+                    mMouseClickX = (int) event.getRawX();
+                    mMouseClickY = (int) event.getRawY();
+                }
+                return false;
+            }
+        });
         desktopIcon.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                Intent launchIntent = getBaseContext()
-                        .getPackageManager()
-                        .getLaunchIntentForPackage(packageName);
-                mMultiwindowManager.startActivity(launchIntent);
-                mUserData.incAppUsedCounter(packageName);
+                if (mMouseButton == MotionEvent.BUTTON_SECONDARY) {
+                    final RightClickContextMenu contextMenu = new RightClickContextMenu(
+                            mContext, mMouseClickX, mMouseClickY);
+                    contextMenu.addButton(mContext.getResources().getString(
+                            R.string.remove_icon_from_desktop),
+                            new OnClickListener() {
+
+                        @Override
+                        public void onClick(View v) {
+                            mDesktopView.removeView(desktopIcon);
+                            deleteFromIconList(packageName);
+                            contextMenu.dismiss();
+                        }
+                    });
+                    contextMenu.show();
+                } else {
+                    Intent launchIntent = mContext
+                            .getPackageManager()
+                            .getLaunchIntentForPackage(packageName);
+                    mMultiwindowManager.startActivity(launchIntent);
+                    mUserData.incAppUsedCounter(packageName);
+                }
             }
         });
         desktopIcon.setOnLongClickListener(new OnLongClickListener() {
 
             @Override
             public boolean onLongClick(View v) {
-                ClipData.Item iconType = new ClipData.Item(sDesktopIcon);
-                ClipData.Item packName = new ClipData.Item((CharSequence) packageName);
-                String[] clipDescription = { ClipDescription.MIMETYPE_TEXT_PLAIN };
-                ClipData dragData = new ClipData("", clipDescription, iconType);
-                dragData.addItem(packName);
+                if (mMouseButton != MotionEvent.BUTTON_SECONDARY) {
+                    ClipData.Item iconType = new ClipData.Item(sDesktopIcon);
+                    ClipData.Item packName = new ClipData.Item((CharSequence) packageName);
+                    String[] clipDescription = { ClipDescription.MIMETYPE_TEXT_PLAIN };
+                    ClipData dragData = new ClipData("", clipDescription, iconType);
+                    dragData.addItem(packName);
 
-                DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(v);
-                v.startDrag(dragData, shadowBuilder, v, 0);
-
+                    DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(v);
+                    v.startDrag(dragData, shadowBuilder, v, 0);
+                }
                 return true;
             }
         });

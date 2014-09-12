@@ -31,5 +31,8 @@
     <string name="failed_to_add_to_fav_list">Failed to add application to Favorite List</string>
     <string name="added_app_to_fav_list">"Added %1$s to Favorite List"</string>
     <string name="deleted_from_fav_list">"Deleted %1$s from Favorite List"</string>
+    <string name="remove_icon_from_menu">Remove item</string>
+    <string name="remove_icon_from_desktop">Remove icon</string>
+    <string name="add_icon_to_favorites">Add to Favorites</string>
 
 </resources>
