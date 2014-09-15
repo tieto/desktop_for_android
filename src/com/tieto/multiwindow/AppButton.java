@@ -20,6 +20,7 @@ package com.tieto.multiwindow;
 import java.util.Vector;
 
 import android.content.Context;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
@@ -80,20 +81,28 @@ public class AppButton extends RelativeLayout {
         });
 
         buttonLayout.setOnLongClickListener(new OnLongClickListener() {
-            ButtonContextMenu popUp = new ButtonContextMenu(getContext(), mAppInfo);
+            ButtonContextMenu popUp = new ButtonContextMenu(getContext(),
+                    mAppInfo);
+            private int mResourceId = getResources().getIdentifier(
+                    "navigation_bar_height", "dimen", "android");
+            private DisplayMetrics mMetrics = getResources()
+                    .getDisplayMetrics();
 
             @Override
             public boolean onLongClick(View v) {
                 int[] location = new int[2];
-                v.getLocationOnScreen(location);
-
-                popUp.show(location[0], (int) (location[1] / 2)
-                        - MenuBar.HEIGHT);
+                v.getLocationInWindow(location);
+                popUp.show(
+                        location[0],
+                        (mMetrics.heightPixels / 2)
+                                - (getResources().getDimensionPixelSize(
+                                        mResourceId) + MenuBar.HEIGHT));
                 return false;
             }
         });
         addView(buttonLayout);
     }
+
     /**
      * maximizeWindows method maximizes window from their actual state, first it
      * takes actual posistion of window on the screen and pushing it in to

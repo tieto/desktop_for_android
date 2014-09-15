@@ -30,7 +30,7 @@ import com.tieto.extension.multiwindow.MultiwindowManager;
 import com.tieto.extension.multiwindow.Window;
 
 public class ButtonContextMenu extends Dialog {
-    private final int MENU_WIDTH = 200;
+    private final int MENU_WIDTH = 150;
     private final int MENU_HEIGHT = 200;
     private final int WINDOW_SPAN_RESIZE = 25;
     private WindowManager.LayoutParams mLayoutParams;
@@ -46,9 +46,9 @@ public class ButtonContextMenu extends Dialog {
         mMultiWindow = new MultiwindowManager(context);
         mAppInfo = appInfo;
         mScreenSizes = context.getResources().getDisplayMetrics();
-        int resourceId = context.getResources().getIdentifier(
-                "status_bar_height", "dimen", "android");
-        mStatusBarSize = (int) context.getResources().getDimension(resourceId);
+        mStatusBarSize = (int) context.getResources().getDimension(
+                context.getResources().getIdentifier("status_bar_height",
+                        "dimen", "android"));
         getWindow().setGravity(Gravity.LEFT);
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
         getWindow().setType(WindowManager.LayoutParams.TYPE_PRIORITY_PHONE);
@@ -63,18 +63,19 @@ public class ButtonContextMenu extends Dialog {
         final Rect leftScreenSize = new Rect(0, mStatusBarSize,
                 mScreenSizes.widthPixels / 2, mScreenSizes.heightPixels
                         - MenuBar.HEIGHT);
-
+        final Rect leftBottom = new Rect(0,
+                ((mScreenSizes.heightPixels - MenuBar.HEIGHT) / 2)
+                        + WINDOW_SPAN_RESIZE, mScreenSizes.widthPixels / 2,
+                (mScreenSizes.heightPixels - MenuBar.HEIGHT));
+        final Rect leftTop = new Rect(0, mStatusBarSize,
+                mScreenSizes.widthPixels / 2, (leftBottom.top));
 
         left.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mMultiWindow.relayoutWindow(mAppInfo.getAppWindow()
                         .getStackId(), new Rect(leftScreenSize));
-                relayoutToSide(leftScreenSize, new Rect(0,
-                        ((mScreenSizes.heightPixels - MenuBar.HEIGHT) / 2)
-                                + WINDOW_SPAN_RESIZE,
-                        mScreenSizes.widthPixels / 2,
-                        (mScreenSizes.heightPixels - MenuBar.HEIGHT)));
+                relayoutToSide(leftScreenSize, leftTop, leftBottom);
                 dismiss();
             }
         });
@@ -85,31 +86,30 @@ public class ButtonContextMenu extends Dialog {
         final Rect rightScreenSize = new Rect(mScreenSizes.widthPixels / 2,
                 mStatusBarSize, mScreenSizes.widthPixels,
                 mScreenSizes.heightPixels - MenuBar.HEIGHT);
+        final Rect rightBottom = new Rect(mScreenSizes.widthPixels / 2,
+                ((mScreenSizes.heightPixels - MenuBar.HEIGHT) / 2)
+                        + WINDOW_SPAN_RESIZE, mScreenSizes.widthPixels,
+                (mScreenSizes.heightPixels - MenuBar.HEIGHT));
+        final Rect rightTop = new Rect(mScreenSizes.widthPixels / 2,
+                mStatusBarSize, mScreenSizes.widthPixels, rightBottom.top);
 
         right.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mMultiWindow.relayoutWindow(mAppInfo.getAppWindow()
                         .getStackId(), new Rect(rightScreenSize));
-                relayoutToSide(rightScreenSize, new Rect(
-                        mScreenSizes.widthPixels / 2,
-                        ((mScreenSizes.heightPixels - MenuBar.HEIGHT) / 2)
-                                + WINDOW_SPAN_RESIZE, mScreenSizes.widthPixels,
-                        (mScreenSizes.heightPixels - MenuBar.HEIGHT)));
+                relayoutToSide(rightScreenSize, rightTop, rightBottom);
                 dismiss();
             }
         });
     }
 
-    public void relayoutToSide(Rect side, Rect appWindow) {
+    public void relayoutToSide(Rect side, Rect resizeTo, Rect appWindow) {
         for (Window window : mMultiWindow.getAllWindows()) {
             if (side.contains(window.getFrame())
                     & !window.equals(mAppInfo.getAppWindow())) {
                 mMultiWindow.relayoutWindow(mAppInfo.getAppWindow()
-                        .getStackId(), new Rect(mScreenSizes.widthPixels / 2,
-                        mStatusBarSize, mScreenSizes.widthPixels,
-                        (mScreenSizes.heightPixels / 2)
-                                - (WINDOW_SPAN_RESIZE * 2)));
+                        .getStackId(), resizeTo);
                 mMultiWindow.relayoutWindow(window.getStackId(), appWindow);
             }
         }

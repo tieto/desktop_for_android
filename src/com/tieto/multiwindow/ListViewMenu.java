@@ -38,7 +38,7 @@ import android.widget.ListView;
 public class ListViewMenu extends Dialog {
 
     private final int mDragShadowSize = 150;
-    private final int mListViewMenuWidth = 700;
+    private final int mListViewMenuWidth = 450;
     private final int mListViewMenuVerticalOffset = 50;
 
     private ListView mListViewMenu;
