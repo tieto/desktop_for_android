@@ -34,15 +34,18 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.DragEvent;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
 import android.view.View.DragShadowBuilder;
 import android.view.View.OnClickListener;
@@ -81,6 +84,7 @@ public class Desktop extends Activity {
     private SharedPreferences mAppSharedPrefs;
     private Editor mPrefsEditor;
     private Gson mGson;
+    private Rect mMaximizedSize;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,7 +93,13 @@ public class Desktop extends Activity {
         mAppSharedPrefs = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
         mPrefsEditor = mAppSharedPrefs.edit();
         mGson = new Gson();
+        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        mMaximizedSize = new Rect(0, getResources().getDimensionPixelSize(
+                resourceId), metrics.widthPixels, metrics.heightPixels
+                - MenuBar.HEIGHT);
         mMultiwindowManager = new MultiwindowManager(getBaseContext());
+        mMultiwindowManager.setMaximizedWindowSize(mMaximizedSize);
         mDesktopView = (ViewGroup) findViewById(R.id.desktop);
         getWindow().getDecorView().setOnDragListener(new OnDragListener() {
             private int mX, mY = 0;
@@ -241,6 +251,12 @@ public class Desktop extends Activity {
     }
 
     @Override
+    protected void onResume() {
+        mMultiwindowManager.setMaximizedWindowSize(mMaximizedSize);
+        super.onResume();
+    }
+
+    @Override
     protected void onStop() {
         mMenu.maximizeMinimizedWindows();
         super.onStop();
@@ -250,6 +266,7 @@ public class Desktop extends Activity {
         mPrefsEditor.putString(sMemAppsUsed, mGson.toJson(mAppsUsed));
         mPrefsEditor.putString(sMemAppsFav, mGson.toJson(mAppsFav));
         mPrefsEditor.commit();
+        mMultiwindowManager.setMaximizedWindowSize(new Rect());
     }
 
     @Override
@@ -258,6 +275,7 @@ public class Desktop extends Activity {
             mMenu.dismiss();
             mMenu = null;
         }
+        mMultiwindowManager.setMaximizedWindowSize(new Rect());
         super.onDestroy();
     }
 
