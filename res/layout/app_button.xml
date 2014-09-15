@@ -19,17 +19,17 @@
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/appButton"
-    style="@style/startButton"
-    android:layout_width="65dp"
+    style="@style/functional_button"
+    android:layout_width="60dp"
     android:layout_height="wrap_content"
     class="com.tieto.multiwindow.AppButton"
-    android:clickable="true"
+    android:background="?android:attr/selectableItemBackground"
     android:gravity="center_horizontal" >
 
     <ImageView
         android:id="@+id/buttonIcon"
-        android:layout_width="65dp"
-        android:layout_height="fill_parent"
+        android:layout_width="60dp"
+        android:layout_height="match_parent"
         android:layout_alignParentLeft="true" />
 
 </RelativeLayout>

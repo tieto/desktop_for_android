@@ -27,14 +27,18 @@
 
     <Button
         android:id="@+id/pushLeft"
+        style="@style/functional_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/align_to_left" />
+        android:text="@string/align_to_left"
+        android:textSize="10sp" />
 
     <Button
         android:id="@+id/pushRight"
+        style="@style/functional_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/align_to_right" />
+        android:text="@string/align_to_right"
+        android:textSize="10sp" />
 
 </LinearLayout>

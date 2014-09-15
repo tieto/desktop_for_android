@@ -35,7 +35,7 @@ public class MenuBar extends Dialog {
     private ApplicationMenu mAppMenu;
     private LinearLayout mLayout;
     private Context mContext;
-    static final int HEIGHT = 150;
+    static final int HEIGHT = 75;
     private MultiwindowManager mMultiwindowManager;
 
     public MenuBar(Context ctx, ApplicationMenu appMenu) {

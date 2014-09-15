@@ -17,7 +17,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<resources>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!--
         Base application theme, dependent on API level. This theme is replaced
@@ -26,27 +26,27 @@
     <style name="MenubarTheme" parent="@android:style/Theme">
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowFullscreen">true</item>
-        <item name="android:background">#78B2BF</item>
+        <item name="android:background">#404040</item>
     </style>
 
     <style name="ApplicationMenuTheme" parent="@android:style/Theme">
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowCloseOnTouchOutside">true</item>
-        <item name="android:background">#78B2BF</item>
+        <item name="android:background">#404040</item>
     </style>
 
     <style name="popupMenu" parent="@android:style/Theme">
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowCloseOnTouchOutside">true</item>
-        <item name="android:background">#78B2BF</item>
+        <item name="android:background">#404040</item>
     </style>
 
     <style name="AppMenuWithTitleTheme" parent="@android:style/Theme">
         <item name="android:windowCloseOnTouchOutside">true</item>
-        <item name="android:background">#78B2BF</item>
+        <item name="android:background">#404040</item>
     </style>
 
-    <style name="startButton" parent="android:Widget.Holo.Button.Borderless"></style>
+    <style name="functional_button" parent="android:Widget.Holo.Button.Borderless"></style>
 
     <style name="AppBaseTheme" parent="android:Theme.Light">
         <!--

@@ -23,7 +23,7 @@
 
     <ImageButton
         android:id="@+id/startButton"
-        style="@style/startButton"
+        style="@style/functional_button"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:clickable="true"
@@ -37,7 +37,7 @@
         android:orientation="horizontal" >
 
         <View
-            android:layout_width="1dp"
+            android:layout_width="2dp"
             android:layout_height="match_parent"
             android:background="#47A0B8"
             android:visibility="visible" />
