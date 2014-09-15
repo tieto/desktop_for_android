@@ -21,6 +21,7 @@ import java.util.Vector;
 
 import android.content.Context;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -41,12 +42,15 @@ public class AppButton extends RelativeLayout {
     /**
      * mMultiwindow manager is responsible for handling multiple windows on screen
      */
+    private Context mContext;
     private MultiwindowManager mMultiwindowManager;
     private int mLeftShift;
     private int mTopShift;
+    private int mMouseButton;
 
     public AppButton(Context context, AppInfo appInfo) {
         super(context);
+        mContext = context;
         mAppInfo= appInfo;
         mMinimized = false;
         mLeftShift = getContext().getResources().getDisplayMetrics().widthPixels;
@@ -68,27 +72,51 @@ public class AppButton extends RelativeLayout {
             iv.setImageDrawable(appInfo.getAppIcon());
         }
 
+        /**
+         * This onTouch event is added just to obtain information about device
+         * that performed Click or LongClick.
+         */
+        buttonLayout.setOnTouchListener(new OnTouchListener() {
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    mMouseButton = event.getButtonState();
+                }
+                return false;
+            }
+        });
+
         buttonLayout.setOnClickListener(new OnClickListener() {
+            ButtonContextMenu mPopUp = new ButtonContextMenu(getContext(), mAppInfo);
+
             @Override
             public void onClick(View v) {
-                if (isMinimized()) {
-                    maximizeWindow();
+                if (mMouseButton == MotionEvent.BUTTON_SECONDARY) {
+                    int[] location = new int[2];
+                    v.getLocationInWindow(location);
+                    mPopUp.show(location[0], (int) v.getY() + MenuBar.HEIGHT);
                 } else {
-                    minimizeWindow();
+                    if (isMinimized()) {
+                        maximizeWindow();
+                    } else {
+                        minimizeWindow();
+                    }
                 }
             }
         });
 
         buttonLayout.setOnLongClickListener(new OnLongClickListener() {
-            ButtonContextMenu popUp = new ButtonContextMenu(getContext(),
-                    mAppInfo);
+            ButtonContextMenu mPopUp = new ButtonContextMenu(getContext(), mAppInfo);
 
-            @Override
             public boolean onLongClick(View v) {
-                int[] location = new int[2];
-                v.getLocationInWindow(location);
-                popUp.show(location[0], (int) v.getY() + MenuBar.HEIGHT);
-                return true;
+                if (mMouseButton != MotionEvent.BUTTON_SECONDARY) {
+                    int[] location = new int[2];
+                    v.getLocationInWindow(location);
+                    mPopUp.show(location[0], (int) v.getY() + MenuBar.HEIGHT);
+                    return true;
+                }
+                return false;
             }
         });
         addView(buttonLayout);
