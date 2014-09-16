@@ -30,15 +30,16 @@ public class FreqMenu extends ListViewMenu {
 
     private Context mContext;
     private UserDataInterface mUserData;
+    private int mNumberOfRows;
 
-    public FreqMenu(Context context, UserDataInterface userData, int numberOfRows) {
-        super(context, R.style.AppMenuWithTitleTheme, userData);
+    public FreqMenu(Context context, UserDataInterface userData, ListViewMenu parentMenu, int numberOfRows) {
+        super(context, R.style.ApplicationMenuTheme, userData);
         mContext = context;
         mUserData = userData;
+        mParentMenu = parentMenu;
+        mNumberOfRows = numberOfRows;
 
-        ArrayList<ListViewMenuItem> listViewItems = fillListViewItems(numberOfRows);
-        fillListViewMenu(listViewItems);
-        this.setTitle(mContext.getResources().getString(R.string.freq_menu_description));
+        updateListViewMenu();
     }
 
     private ArrayList<ListViewMenuItem> fillListViewItems(int numberOfRows) {
@@ -74,5 +75,10 @@ public class FreqMenu extends ListViewMenu {
     @Override
     protected boolean onMenuItemLongClick(AdapterView<?> parent, View view, int position) {
         return true;
+    }
+
+    public void updateListViewMenu() {
+        setListViewMenuItems(fillListViewItems(mNumberOfRows));
+        fillListViewMenu(getListViewMenuItems());
     }
 }

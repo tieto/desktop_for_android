@@ -23,6 +23,7 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.Toast;
 
@@ -31,14 +32,13 @@ public class FavMenu extends ListViewMenu {
     private Context mContext;
     private UserDataInterface mUserData;
 
-    public FavMenu(Context context, UserDataInterface userData) {
-        super(context, R.style.AppMenuWithTitleTheme, userData);
+    public FavMenu(Context context, UserDataInterface userData, ListViewMenu parentMenu) {
+        super(context, R.style.ApplicationMenuTheme, userData);
         mContext = context;
         mUserData = userData;
+        mParentMenu = parentMenu;
 
-        ArrayList<ListViewMenuItem> listViewItems = fillListViewItems();
-        fillListViewMenu(listViewItems);
-        this.setTitle(mContext.getResources().getString(R.string.fav_menu_description));
+        updateListViewMenu();
     }
 
     private ArrayList<ListViewMenuItem> fillListViewItems() {
@@ -87,9 +87,11 @@ public class FavMenu extends ListViewMenu {
     private void deleteItemFromMenu(AdapterView<?> parent, int position) {
         ListViewMenuItem item = (ListViewMenuItem) parent.getItemAtPosition(position);
         String packageName = item.getPackageName();
+        WindowManager.LayoutParams attr = getWindow().getAttributes();
+        ListViewMenuAdapter adapter = (ListViewMenuAdapter) parent.getAdapter();
         for (String appToDelete : mUserData.getAppsFavList()) {
             if (appToDelete.equals(packageName)) {
-                ListViewMenuAdapter adapter = (ListViewMenuAdapter) parent.getAdapter();
+                attr.height -= getListViewMenuItemHeight(position);
                 adapter.remove(item);
                 adapter.notifyDataSetChanged();
                 mUserData.getAppsFavList().remove(appToDelete);
@@ -99,5 +101,16 @@ public class FavMenu extends ListViewMenu {
                 break;
             }
         }
+        if (adapter.getCount() != 0) {
+            attr.height -= getListViewMenu().getDividerHeight();
+            getWindow().getCallback().onWindowAttributesChanged(attr);
+        } else {
+            dismiss();
+        }
+    }
+
+    public void updateListViewMenu() {
+        setListViewMenuItems(fillListViewItems());
+        fillListViewMenu(getListViewMenuItems());
     }
 }

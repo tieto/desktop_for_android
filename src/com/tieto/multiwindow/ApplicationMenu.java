@@ -38,22 +38,30 @@ import android.widget.Toast;
 public class ApplicationMenu extends ListViewMenu {
 
     private final int numberOfRows = 5;
-    public static final String sFreq = "freq";
+    public final static String sFreq = "freq";
     public final static String sFav = "fav";
-    public final boolean SCROLL_DEBUG = false;
+    private final int FREQ_POSITION = 1;
+    private final int FAV_POSITION = 0;
+    private final boolean SCROLL_DEBUG = false;
 
     private Context mContext;
     private UserDataInterface mUserData;
+
+    private FreqMenu mFreqMenu;
+    private FavMenu mFavMenu;
 
     public ApplicationMenu(Context context, UserDataInterface userData) {
         super(context, R.style.ApplicationMenuTheme, userData);
         mContext = context;
         mUserData = userData;
 
-        ArrayList<ListViewMenuItem> listViewItems = fillListViewItems();
-        listViewItems.add(0, addRowToListViewItems(sFav, mContext.getResources().getString(R.string.fav_menu_title)));
-        listViewItems.add(1, addRowToListViewItems(sFreq, mContext.getResources().getString(R.string.freq_menu_title)));
-        fillListViewMenu( listViewItems);
+        updateListViewMenu();
+        setBaseMenuWindowParams();
+
+        mFreqMenu = new FreqMenu(mContext, mUserData, this, numberOfRows);
+        mFreqMenu.setOnAppListener(getOnAppListener());
+        mFavMenu = new FavMenu(mContext, mUserData, this);
+        mFavMenu.setOnAppListener(getOnAppListener());
 
         ListView listViewMenu = getListViewMenu();
         listViewMenu.setOnDragListener(new OnDragListener() {
@@ -146,7 +154,7 @@ public class ApplicationMenu extends ListViewMenu {
 
             private void hoverItemBackground (int position, int color) {
                 if (position >= mListView.getFirstVisiblePosition()
-                        && position <= mListView.getFirstVisiblePosition()) {
+                        && position <= mListView.getLastVisiblePosition()) {
                     View item = mListView.getChildAt(position);
                     item.setBackgroundColor(color);
                 }
@@ -252,11 +260,6 @@ public class ApplicationMenu extends ListViewMenu {
         return listViewItems;
     }
 
-    private ListViewMenuItem addRowToListViewItems(String id, String title) {
-        return new ListViewMenuItem(
-                mContext.getResources().getDrawable(android.R.drawable.ic_menu_send), title, id);
-    }
-
     @Override
     protected void onMenuItemClick(AdapterView<?> parent, int position) {
         final String packageName = ((ListViewMenuItem) parent.getAdapter()
@@ -292,15 +295,11 @@ public class ApplicationMenu extends ListViewMenu {
                 contextMenu.show();
             }
         } else if (packageName.equals(sFreq)) {
-            FreqMenu freqMenu = new FreqMenu(mContext, mUserData, numberOfRows);
-            freqMenu.setOnAppListener(getOnAppListener());
-            freqMenu.show();
-            dismiss();
+            mFreqMenu.updateListViewMenu();
+            mFreqMenu.show(getYOffsetAtPosition(FREQ_POSITION));
         } else if (packageName.equals(sFav)) {
-            FavMenu mFavMenu = new FavMenu(mContext, mUserData);
-            mFavMenu.setOnAppListener(getOnAppListener());
-            mFavMenu.show();
-            dismiss();
+            mFavMenu.updateListViewMenu();
+            mFavMenu.show(getYOffsetAtPosition(FAV_POSITION));
         } else {
             super.onMenuItemClick(parent, position);
         }
@@ -316,5 +315,14 @@ public class ApplicationMenu extends ListViewMenu {
             }
         }
         return true;
+    }
+
+    public void updateListViewMenu() {
+        setListViewMenuItems(fillListViewItems());
+        getListViewMenuItems().add(FAV_POSITION, addRowToListViewItems(sFav,
+                mContext.getResources().getString(R.string.fav_menu_title)));
+        getListViewMenuItems().add(FREQ_POSITION, addRowToListViewItems(sFreq,
+                mContext.getResources().getString(R.string.freq_menu_title)));
+        fillListViewMenu(getListViewMenuItems());
     }
 }

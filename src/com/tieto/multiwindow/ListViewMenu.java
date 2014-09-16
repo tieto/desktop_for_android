@@ -26,10 +26,10 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.MeasureSpec;
 import android.view.View.OnTouchListener;
 import android.view.WindowManager;
 import android.widget.AdapterView;
@@ -37,6 +37,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 public class ListViewMenu extends Dialog {
 
@@ -47,6 +48,8 @@ public class ListViewMenu extends Dialog {
     private ListView mListViewMenu;
     private OnAppStartListener mOnAppListener;
     private UserDataInterface mUserData;
+    protected ListViewMenu mParentMenu;
+    private ArrayList<ListViewMenuItem> mListViewMenuItems;
 
     private Context mContext;
     private Resources mResources;
@@ -56,12 +59,16 @@ public class ListViewMenu extends Dialog {
     protected int mMouseClickX;
     protected int mMouseClickY;
 
+    protected boolean stopDismiss;
+
     public ListViewMenu(Context context, int theme, UserDataInterface userData) {
         super(context, theme);
         mContext = context;
         mResources = context.getResources();
         mPackerManager = context.getPackageManager();
         mUserData = userData;
+        mParentMenu = null;
+        stopDismiss = false;
 
         initWindowParams();
         setContentView(R.layout.application_menu);
@@ -128,6 +135,89 @@ public class ListViewMenu extends Dialog {
                 ai.packageName);
     }
 
+    public ListViewMenuItem addRowToListViewItems(String id, String title) {
+        return new ListViewMenuItem(
+                mContext.getResources().getDrawable(android.R.drawable.ic_menu_send), title, id);
+    }
+
+    protected int getListViewMenuHeight() {
+        ListViewMenuAdapter adapter = (ListViewMenuAdapter) mListViewMenu.getAdapter();
+        int listViewMenuHeight = 0;
+        int numberOfItems = adapter.getCount();
+        for (int i = 0; i < numberOfItems; i++) {
+            View mView = adapter.getView(i, null, mListViewMenu);
+            mView.measure(
+                    MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED),
+                    MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
+            listViewMenuHeight += mView.getMeasuredHeight();
+        }
+        if (numberOfItems > 1) {
+            listViewMenuHeight += mListViewMenu.getDividerHeight() * (numberOfItems - 1);
+        }
+
+        return listViewMenuHeight;
+    }
+
+    protected int getListViewMenuItemHeight(int position) {
+        ListViewMenuAdapter adapter = (ListViewMenuAdapter) mListViewMenu.getAdapter();
+        View mView = adapter.getView(position, null, mListViewMenu);
+        mView.measure(
+                MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED),
+                MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
+
+        return mView.getMeasuredHeight();
+    }
+
+    /**
+     * Calculate offset form top of ListView to top edge of particular ListView item.
+     *
+     * @param position to calculate offset.
+     * @return offset.
+     */
+    public int getYOffsetAtPosition(int position) {
+        int yOffset = 0;
+        int firstVisiblePosition = mListViewMenu.getFirstVisiblePosition();
+        for (int i = firstVisiblePosition; i < position; i++) {
+            yOffset += getListViewMenuItemHeight(i);
+        }
+        if (position - firstVisiblePosition > 0) {
+            yOffset += mListViewMenu.getDividerHeight() * (position - firstVisiblePosition);
+            yOffset += mListViewMenu.getChildAt(0).getY();
+        }
+
+        return yOffset;
+    }
+
+    protected void setBaseMenuWindowParams() {
+        int menuHeight = getListViewMenuHeight();
+        int screenHeight = mContext.getApplicationContext()
+                .getResources().getDisplayMetrics().heightPixels;
+        int yPosition = getWindow().getAttributes().y;
+        if (screenHeight - MenuBar.HEIGHT < menuHeight + yPosition) {
+            getWindow().getAttributes().height = screenHeight - MenuBar.HEIGHT - yPosition;
+        } else {
+            getWindow().getAttributes().height = menuHeight;
+            getWindow().getAttributes().y = screenHeight - MenuBar.HEIGHT - menuHeight;
+        }
+    }
+
+    protected void setSubMenuWindowParams(int yOffset) {
+        WindowManager.LayoutParams parentAttr = mParentMenu.getWindow().getAttributes();
+
+        getWindow().getAttributes().x = parentAttr.x + mListViewMenuWidth + 1;
+        getWindow().getAttributes().y = parentAttr.y + yOffset;
+
+        int menuHeight = getListViewMenuHeight();
+        int screenHeight = mContext.getApplicationContext()
+                .getResources().getDisplayMetrics().heightPixels;
+        int yPosition = getWindow().getAttributes().y;
+        if (screenHeight - MenuBar.HEIGHT < menuHeight + yPosition) {
+            getWindow().getAttributes().height = screenHeight - MenuBar.HEIGHT - yPosition;
+        } else {
+            getWindow().getAttributes().height = menuHeight;
+        }
+    }
+
     public ListView getListViewMenu() {
         return mListViewMenu;
     }
@@ -138,6 +228,38 @@ public class ListViewMenu extends Dialog {
 
     public void setOnAppListener(OnAppStartListener onAppListener) {
         this.mOnAppListener = onAppListener;
+    }
+
+    public ArrayList<ListViewMenuItem> getListViewMenuItems() {
+        return mListViewMenuItems;
+    }
+
+    public void setListViewMenuItems(ArrayList<ListViewMenuItem> listViewMenuItems) {
+        mListViewMenuItems = listViewMenuItems;
+    }
+
+    @Override
+    public void dismiss() {
+        if (!stopDismiss) {
+            super.dismiss();
+            if (mParentMenu != null) {
+                mParentMenu.dismiss();
+            }
+        } else {
+            stopDismiss = false;
+        }
+    }
+
+    /**
+     * Just like {@link Dialog#show()}, but also LayoutParameters of Window are set,
+     * according to parent ListViewMenu.
+     *
+     * @param yOffset difference between y of parent ListViewMenu and y position,
+     * that SubMenu should be showed. See {@link ListViewMenu#getYOffsetAtPosition(int)}.
+     */
+    public void show(int yOffset) {
+        setSubMenuWindowParams(yOffset);
+        show();
     }
 
     protected void onMenuItemClick(AdapterView<?> parent, int position) {
@@ -163,6 +285,32 @@ public class ListViewMenu extends Dialog {
                 mDragShadowSize, mDragShadowSize);
         view.startDrag(dragData, shadowBuilder, view, 0);
 
+        return true;
+    }
+
+    private boolean isOutOfBounds(int x, int y) {
+        WindowManager.LayoutParams attr = getWindow().getAttributes();
+        int startX = attr.x;
+        int startY = attr.y;
+        int endX = startX + attr.width;
+        int endY = startY + attr.height;
+        return (x < startX || x > endX || y < startY || y > endY);
+    }
+
+    private void markDismissBound(int x, int y) {
+        if (isOutOfBounds(x, y)) {
+            if (mParentMenu != null) {
+                mParentMenu.markDismissBound(x, y);
+            }
+        } else {
+            stopDismiss = true;
+        }
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        markDismissBound((int) event.getRawX(), (int) event.getRawY());
+        dismiss();
         return true;
     }
 }
