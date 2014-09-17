@@ -1,5 +1,5 @@
 /**
- * AndroidDesktop
+ * Desktop for Android
  * Copyright (C) 2014 Tieto Poland Sp. z o.o.
  *
  * This program is free software: you can redistribute it and/or modify it under
