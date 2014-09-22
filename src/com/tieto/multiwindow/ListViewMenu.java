@@ -250,6 +250,13 @@ public class ListViewMenu extends Dialog {
         }
     }
 
+    @Override
+    public void show() {
+        if (!mListViewMenu.getAdapter().isEmpty()) {
+            super.show();
+        }
+    }
+
     /**
      * Just like {@link Dialog#show()}, but also LayoutParameters of Window are set,
      * according to parent ListViewMenu.

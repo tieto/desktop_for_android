@@ -31,8 +31,11 @@ import android.widget.TextView;
 
 public class ListViewMenuAdapter extends ArrayAdapter<ListViewMenuItem> {
 
+    private UserDataInterface mUserData;
+
     public ListViewMenuAdapter(Context context, int resourceId, List<ListViewMenuItem> items) {
         super(context, resourceId, items);
+        mUserData = null;
     }
 
     public View getView(int position, View convertView, ViewGroup parent) {
@@ -49,13 +52,35 @@ public class ListViewMenuAdapter extends ArrayAdapter<ListViewMenuItem> {
 
         imageView.setImageDrawable(rowItem.getImage());
         txtTitle.setText(rowItem.getTitle());
-        if (rowItem.getPackageName().equals(ApplicationMenu.sFreq)
-                || rowItem.getPackageName().equals(ApplicationMenu.sFav)) {
+        if (rowItem.getPackageName().equals(ApplicationMenu.sFav) ||
+                rowItem.getPackageName().equals(ApplicationMenu.sFreq)) {
             txtTitle.setTypeface(null, Typeface.BOLD);
         } else {
             txtTitle.setTypeface(null, Typeface.NORMAL);
         }
 
+        if (mUserData != null) {
+            if ((rowItem.getPackageName().equals(ApplicationMenu.sFav) && mUserData.getAppsFavList().size() == 0) ||
+                    (rowItem.getPackageName().equals(ApplicationMenu.sFreq) && mUserData.getAppsUsedList().size() == 0)) {
+                rowItem.setActive(false);
+            } else {
+                rowItem.setActive(true);
+            }
+            txtTitle.setTextColor(getTextColor(rowItem));
+        }
+
         return convertView;
+    }
+
+    public void setUserData(UserDataInterface userData) {
+        mUserData = userData;
+    }
+
+    public int getTextColor(ListViewMenuItem item) {
+        if (item.isActive()) {
+            return getContext().getResources().getColor(R.color.base_text_color);
+        } else {
+            return getContext().getResources().getColor(R.color.inactive_text_color);
+        }
     }
 }

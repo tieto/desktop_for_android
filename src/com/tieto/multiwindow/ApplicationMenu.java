@@ -138,6 +138,7 @@ public class ApplicationMenu extends ListViewMenu {
                                 ApplicationInfo ai = mPackerManager.getApplicationInfo(packageName, 0);
                                 String appName = mPackerManager.getApplicationLabel(ai).toString();
                                 mUserData.getAppsFavList().add(packageName);
+                                ((ListViewMenuAdapter) mListView.getAdapter()).notifyDataSetChanged();
                                 Toast.makeText(mContext, String.format(mResources.getString(
                                         R.string.added_app_to_fav_list), appName),
                                         Toast.LENGTH_SHORT).show();
@@ -246,6 +247,7 @@ public class ApplicationMenu extends ListViewMenu {
                 }
             }
         });
+        ((ListViewMenuAdapter) listViewMenu.getAdapter()).setUserData(userData);
     }
 
     private ArrayList<ListViewMenuItem> fillListViewItems() {
@@ -262,8 +264,8 @@ public class ApplicationMenu extends ListViewMenu {
 
     @Override
     protected void onMenuItemClick(AdapterView<?> parent, int position) {
-        final String packageName = ((ListViewMenuItem) parent.getAdapter()
-                .getItem(position)).getPackageName();
+        final ListViewMenuAdapter adapter = ((ListViewMenuAdapter) parent.getAdapter());
+        final String packageName = adapter.getItem(position).getPackageName();
         boolean isRightClick = (mMouseButton == MotionEvent.BUTTON_SECONDARY);
         if (isRightClick) {
             if (!packageName.equals(sFreq) && !packageName.equals(sFav)) {
@@ -288,6 +290,7 @@ public class ApplicationMenu extends ListViewMenu {
                                     Toast.LENGTH_SHORT).show();
                         } else {
                             mUserData.getAppsFavList().add(packageName);
+                            adapter.notifyDataSetChanged();
                         }
                         contextMenu.dismiss();
                     }

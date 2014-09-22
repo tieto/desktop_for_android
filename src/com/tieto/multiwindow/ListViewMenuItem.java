@@ -23,11 +23,13 @@ public class ListViewMenuItem {
     private Drawable mIcon;
     private String mTitle;
     private String mPackageName;
+    private boolean mIsActive;
 
     public ListViewMenuItem(Drawable icon, String title, String packageName) {
         mIcon = icon;
         mTitle = title;
         mPackageName = packageName;
+        mIsActive = true;
     }
 
     public Drawable getImage() {
@@ -52,6 +54,14 @@ public class ListViewMenuItem {
 
     public void setTitle(String title) {
         mTitle = title;
+    }
+
+    public boolean isActive() {
+        return mIsActive;
+    }
+
+    public void setActive(boolean active) {
+        mIsActive = active;
     }
 
     @Override

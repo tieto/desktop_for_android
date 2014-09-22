@@ -34,5 +34,6 @@
     <string name="remove_icon_from_menu">Remove item</string>
     <string name="remove_icon_from_desktop">Remove icon</string>
     <string name="add_icon_to_favorites">Add to Favorites</string>
+    <string name="menu_is_empty">Menu is empty</string>
 
 </resources>

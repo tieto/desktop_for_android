@@ -20,5 +20,7 @@
 
     <color name="black_full_opaque">#FF000000</color>
     <color name="black_half_opaque">#80000000</color>
+    <color name="base_text_color">#FFFFFFFF</color>
+    <color name="inactive_text_color">#FF808080</color>
 
 </resources>
