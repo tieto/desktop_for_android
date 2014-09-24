@@ -30,9 +30,9 @@ import com.tieto.extension.multiwindow.MultiwindowManager;
 import com.tieto.extension.multiwindow.Window;
 
 public class ButtonContextMenu extends Dialog {
-    private final int MENU_WIDTH = 150;
-    private final int MENU_HEIGHT = 200;
-    private final int WINDOW_SPAN_RESIZE = 25;
+    private final int MENU_WIDTH;
+    private final int MENU_HEIGHT;
+    private final int WINDOW_SPAN_RESIZE;
     private WindowManager.LayoutParams mLayoutParams;
     private AppInfo mAppInfo;
     private DisplayMetrics mScreenSizes;
@@ -41,6 +41,12 @@ public class ButtonContextMenu extends Dialog {
 
     public ButtonContextMenu(Context context, AppInfo appInfo) {
         super(context, R.style.popupMenu);
+        MENU_WIDTH = getContext().getResources().getDimensionPixelSize(
+                R.dimen.button_context_menu_width);
+        MENU_HEIGHT = getContext().getResources()
+                .getDimensionPixelSize(R.dimen.button_context_menu_height);
+        WINDOW_SPAN_RESIZE = getContext().getResources()
+                .getDimensionPixelSize(R.dimen.window_span_resize);
         setContentView(R.layout.menu_popup_layout);
         mLayoutParams = getWindow().getAttributes();
         mMultiWindow = new MultiwindowManager(context);
@@ -62,11 +68,11 @@ public class ButtonContextMenu extends Dialog {
         Button left = (Button) findViewById(R.id.pushLeft);
         final Rect leftScreenSize = new Rect(0, mStatusBarSize,
                 mScreenSizes.widthPixels / 2, mScreenSizes.heightPixels
-                        - MenuBar.HEIGHT);
+                        - Desktop.MENUBAR_HEIGHT);
         final Rect leftBottom = new Rect(0,
-                ((mScreenSizes.heightPixels - MenuBar.HEIGHT) / 2)
+                ((mScreenSizes.heightPixels - Desktop.MENUBAR_HEIGHT) / 2)
                         + WINDOW_SPAN_RESIZE, mScreenSizes.widthPixels / 2,
-                (mScreenSizes.heightPixels - MenuBar.HEIGHT));
+                (mScreenSizes.heightPixels - Desktop.MENUBAR_HEIGHT));
         final Rect leftTop = new Rect(0, mStatusBarSize,
                 mScreenSizes.widthPixels / 2, (leftBottom.top));
 
@@ -85,11 +91,11 @@ public class ButtonContextMenu extends Dialog {
         Button right = (Button) findViewById(R.id.pushRight);
         final Rect rightScreenSize = new Rect(mScreenSizes.widthPixels / 2,
                 mStatusBarSize, mScreenSizes.widthPixels,
-                mScreenSizes.heightPixels - MenuBar.HEIGHT);
+                mScreenSizes.heightPixels - Desktop.MENUBAR_HEIGHT);
         final Rect rightBottom = new Rect(mScreenSizes.widthPixels / 2,
-                ((mScreenSizes.heightPixels - MenuBar.HEIGHT) / 2)
+                ((mScreenSizes.heightPixels - Desktop.MENUBAR_HEIGHT) / 2)
                         + WINDOW_SPAN_RESIZE, mScreenSizes.widthPixels,
-                (mScreenSizes.heightPixels - MenuBar.HEIGHT));
+                (mScreenSizes.heightPixels - Desktop.MENUBAR_HEIGHT));
         final Rect rightTop = new Rect(mScreenSizes.widthPixels / 2,
                 mStatusBarSize, mScreenSizes.widthPixels, rightBottom.top);
 

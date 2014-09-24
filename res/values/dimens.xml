@@ -16,11 +16,16 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/desktop"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:animateLayoutChanges="true"
-    tools:context="${relativePackage}.${activityClass}" >
-</RelativeLayout>
+<resources>
+
+    <dimen name="menu_bar_height">40dp</dimen>
+    <dimen name="options_menu_width">200dp</dimen>
+    <dimen name="options_menu_heigth">124dp</dimen>
+    <dimen name="drag_shadow_size">50dp</dimen>
+    <dimen name="list_view_vertical_offset">0dp</dimen>
+    <dimen name="list_view_menu_width">200dp</dimen>
+    <dimen name="button_context_menu_width">65dp</dimen>
+    <dimen name="button_context_menu_height">100dp</dimen>
+    <dimen name="window_span_resize">20dp</dimen>
+
+</resources>

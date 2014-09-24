@@ -35,12 +35,14 @@ public class MenuBar extends Dialog {
     private ApplicationMenu mAppMenu;
     private LinearLayout mLayout;
     private Context mContext;
-    static final int HEIGHT = 75;
-    private MultiwindowManager mMultiwindowManager;
 
-    public MenuBar(Context ctx, ApplicationMenu appMenu) {
+    private MultiwindowManager mMultiwindowManager;
+    private OptionsMenu mOptionsMenu;
+
+    public MenuBar(Context ctx, ApplicationMenu appMenu, OptionsMenu optionsMenu) {
         super(ctx, R.style.MenubarTheme);
         setContentView(R.layout.menu_bar);
+        mOptionsMenu = optionsMenu;
         mAppMenu = appMenu;
         mLayout = ((LinearLayout) findViewById(R.id.bottomBar));
         mContext = ctx;
@@ -60,8 +62,21 @@ public class MenuBar extends Dialog {
         setFlags();
         resizeToFit();
         setStartButton();
+        setOptionsButton();
         initBar();
         setCancelable(false);
+    }
+
+    private void setOptionsButton() {
+
+        findViewById(R.id.optionsButton).setOnClickListener(
+                new View.OnClickListener() {
+
+                    @Override
+                    public void onClick(View v) {
+                        mOptionsMenu.show(0, (int) v.getY() + Desktop.MENUBAR_HEIGHT);
+                    }
+                });
     }
 
     private void setFlags() {
@@ -77,7 +92,7 @@ public class MenuBar extends Dialog {
     private void resizeToFit() {
         mParameters.gravity = Gravity.BOTTOM | Gravity.LEFT;
         mParameters.width = WindowManager.LayoutParams.MATCH_PARENT;
-        mParameters.height = HEIGHT;
+        mParameters.height = Desktop.MENUBAR_HEIGHT;
     }
 
     public void addButton(final Window window) {

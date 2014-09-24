@@ -22,5 +22,6 @@
     <color name="black_half_opaque">#80000000</color>
     <color name="base_text_color">#FFFFFFFF</color>
     <color name="inactive_text_color">#FF808080</color>
+    <color name="base_orange">#FC9C14</color>
 
 </resources>

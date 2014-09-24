@@ -71,6 +71,7 @@ public class Desktop extends Activity {
     public static final String sMemWallpaperPath = "WallpaperPath";
     public static final String sMemAppsUsed = "AppsUsed";
     public static final String sMemAppsFav = "AppsFav";
+    public static int MENUBAR_HEIGHT;
     private ViewGroup mDesktopView;
     private MultiwindowManager mMultiwindowManager;
     private ApplicationMenu mAppMenu;
@@ -95,17 +96,14 @@ public class Desktop extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_desktop);
+        MENUBAR_HEIGHT = getResources().getDimensionPixelSize(R.dimen.menu_bar_height);
         mContext = this;
         mAppSharedPrefs = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
         mPrefsEditor = mAppSharedPrefs.edit();
         mGson = new Gson();
         int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
         DisplayMetrics metrics = getResources().getDisplayMetrics();
-        mMaximizedSize = new Rect(0, getResources().getDimensionPixelSize(
-                resourceId), metrics.widthPixels, metrics.heightPixels
-                - MenuBar.HEIGHT);
         mMultiwindowManager = new MultiwindowManager(mContext);
-        mMultiwindowManager.setMaximizedWindowSize(mMaximizedSize);
         mDesktopView = (ViewGroup) findViewById(R.id.desktop);
         getWindow().getDecorView().setOnDragListener(new OnDragListener() {
             private int mX, mY = 0;
@@ -240,20 +238,16 @@ public class Desktop extends Activity {
                 return mAppsFav;
             }
         };
+        OptionsMenu optionsMenu = new OptionsMenu(Desktop.this, this);
         mAppMenu = new ApplicationMenu(this, mUserData);
         if (mMenu == null) {
-            mMenu = new MenuBar(this, mAppMenu);
+            mMenu = new MenuBar(this, mAppMenu, optionsMenu);
             mMenu.show();
         }
-
-        findViewById(R.id.browseGallery).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_PICK,
-                        android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                startActivityForResult(intent, SELECT_PICTURE);
-            }
-        });
+        mMaximizedSize = new Rect(0, getResources().getDimensionPixelSize(
+                resourceId), metrics.widthPixels, metrics.heightPixels
+                - Desktop.MENUBAR_HEIGHT);
+        mMultiwindowManager.setMaximizedWindowSize(mMaximizedSize);
     }
 
     @Override

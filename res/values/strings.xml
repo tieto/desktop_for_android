@@ -35,5 +35,14 @@
     <string name="remove_icon_from_desktop">Remove icon</string>
     <string name="add_icon_to_favorites">Add to Favorites</string>
     <string name="menu_is_empty">Menu is empty</string>
+    <string name="no">No</string>
+    <string name="yes">Yes</string>
+    <string name="are_you_sure">Are you sure you want close Desktop for Android?</string>
+    <string name="exit">Exit</string>
+    <string name="change_wallpaper">Change Wallpaper</string>
+    <string name="about">About</string>
+    <string name="cancel">Cancel</string>
+    <string name="error_about">ERROR, cannot find about.txt</string>
+    <string name="about_txt">about.txt</string>
 
 </resources>

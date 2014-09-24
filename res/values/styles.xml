@@ -48,6 +48,8 @@
 
     <style name="functional_button" parent="android:Widget.Holo.Button.Borderless"></style>
 
+    <style name="exitdialog" parent="@android:style/Theme.Holo.Dialog"></style>
+
     <style name="AppBaseTheme" parent="android:Theme.Light">
         <!--
             Theme customizations available in newer API levels can go in

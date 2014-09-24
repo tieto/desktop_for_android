@@ -37,13 +37,12 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.Toast;
 
 public class ListViewMenu extends Dialog {
 
-    private final int mDragShadowSize = 150;
-    private final int mListViewMenuWidth = 450;
-    private final int mListViewMenuVerticalOffset = 50;
+    private final int mDragShadowSize;
+    private final int mListViewMenuWidth;
+    private final int mListViewMenuVerticalOffset;
 
     private ListView mListViewMenu;
     private OnAppStartListener mOnAppListener;
@@ -69,6 +68,10 @@ public class ListViewMenu extends Dialog {
         mUserData = userData;
         mParentMenu = null;
         stopDismiss = false;
+
+        mDragShadowSize = (int) mResources.getDimension(R.dimen.drag_shadow_size);
+        mListViewMenuVerticalOffset = (int) mResources.getDimension(R.dimen.list_view_vertical_offset);
+        mListViewMenuWidth = (int) mResources.getDimension(R.dimen.list_view_menu_width);
 
         initWindowParams();
         setContentView(R.layout.application_menu);
@@ -109,8 +112,7 @@ public class ListViewMenu extends Dialog {
     }
 
     private void initWindowParams() {
-        int useableScreenHeight = mContext.getApplicationContext()
-                .getResources().getDisplayMetrics().heightPixels;
+        int screenHeight = mResources.getDisplayMetrics().heightPixels;
 
         getWindow().setType(WindowManager.LayoutParams.TYPE_PRIORITY_PHONE);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
@@ -119,8 +121,8 @@ public class ListViewMenu extends Dialog {
         getWindow().getAttributes().x = 0;
         getWindow().getAttributes().y = mListViewMenuVerticalOffset;
         getWindow().getAttributes().width = mListViewMenuWidth;
-        getWindow().getAttributes().height = useableScreenHeight
-                - MenuBar.HEIGHT - mListViewMenuVerticalOffset;
+        getWindow().getAttributes().height = screenHeight
+                - Desktop.MENUBAR_HEIGHT - mListViewMenuVerticalOffset;
     }
 
     public void fillListViewMenu(ArrayList<ListViewMenuItem> listViewItems) {
@@ -190,14 +192,13 @@ public class ListViewMenu extends Dialog {
 
     protected void setBaseMenuWindowParams() {
         int menuHeight = getListViewMenuHeight();
-        int screenHeight = mContext.getApplicationContext()
-                .getResources().getDisplayMetrics().heightPixels;
+        int screenHeight = mResources.getDisplayMetrics().heightPixels;
         int yPosition = getWindow().getAttributes().y;
-        if (screenHeight - MenuBar.HEIGHT < menuHeight + yPosition) {
-            getWindow().getAttributes().height = screenHeight - MenuBar.HEIGHT - yPosition;
+        if (screenHeight - Desktop.MENUBAR_HEIGHT < menuHeight + yPosition) {
+            getWindow().getAttributes().height = screenHeight - Desktop.MENUBAR_HEIGHT - yPosition;
         } else {
             getWindow().getAttributes().height = menuHeight;
-            getWindow().getAttributes().y = screenHeight - MenuBar.HEIGHT - menuHeight;
+            getWindow().getAttributes().y = screenHeight - Desktop.MENUBAR_HEIGHT - menuHeight;
         }
     }
 
@@ -208,11 +209,10 @@ public class ListViewMenu extends Dialog {
         getWindow().getAttributes().y = parentAttr.y + yOffset;
 
         int menuHeight = getListViewMenuHeight();
-        int screenHeight = mContext.getApplicationContext()
-                .getResources().getDisplayMetrics().heightPixels;
+        int screenHeight = mResources.getDisplayMetrics().heightPixels;
         int yPosition = getWindow().getAttributes().y;
-        if (screenHeight - MenuBar.HEIGHT < menuHeight + yPosition) {
-            getWindow().getAttributes().height = screenHeight - MenuBar.HEIGHT - yPosition;
+        if (screenHeight - Desktop.MENUBAR_HEIGHT < menuHeight + yPosition) {
+            getWindow().getAttributes().height = screenHeight - Desktop.MENUBAR_HEIGHT - yPosition;
         } else {
             getWindow().getAttributes().height = menuHeight;
         }

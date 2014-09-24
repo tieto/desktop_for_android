@@ -95,7 +95,7 @@ public class AppButton extends RelativeLayout {
                 if (mMouseButton == MotionEvent.BUTTON_SECONDARY) {
                     int[] location = new int[2];
                     v.getLocationInWindow(location);
-                    mPopUp.show(location[0], (int) v.getY() + MenuBar.HEIGHT);
+                    mPopUp.show(location[0], (int) v.getY() + Desktop.MENUBAR_HEIGHT);
                 } else {
                     if (isMinimized()) {
                         maximizeWindow();
@@ -113,7 +113,7 @@ public class AppButton extends RelativeLayout {
                 if (mMouseButton != MotionEvent.BUTTON_SECONDARY) {
                     int[] location = new int[2];
                     v.getLocationInWindow(location);
-                    mPopUp.show(location[0], (int) v.getY() + MenuBar.HEIGHT);
+                    mPopUp.show(location[0], (int) v.getY() + Desktop.MENUBAR_HEIGHT);
                     return true;
                 }
                 return false;

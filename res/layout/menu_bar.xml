@@ -24,9 +24,10 @@
     <ImageButton
         android:id="@+id/startButton"
         style="@style/functional_button"
-        android:layout_width="wrap_content"
+        android:layout_width="70dp"
         android:layout_height="match_parent"
-        android:clickable="true"
+        android:orientation="vertical"
+        android:padding="2dp"
         android:src="@drawable/ic_launcher" />
 
     <LinearLayout
@@ -37,10 +38,28 @@
         android:orientation="horizontal" >
 
         <View
-            android:layout_width="2dp"
+            android:layout_width="1dp"
             android:layout_height="match_parent"
-            android:background="#47A0B8"
+            android:background="@color/base_orange"
             android:visibility="visible" />
     </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/optionsButton"
+        style="@style/functional_button"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:clickable="true"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_more" />
+
+    <View
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:layout_toLeftOf="@id/optionsButton"
+        android:background="@color/base_orange"
+        android:visibility="visible" />
 
 </RelativeLayout>
