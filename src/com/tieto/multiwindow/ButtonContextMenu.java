@@ -49,7 +49,7 @@ public class ButtonContextMenu extends Dialog {
         mStatusBarSize = (int) context.getResources().getDimension(
                 context.getResources().getIdentifier("status_bar_height",
                         "dimen", "android"));
-        getWindow().setGravity(Gravity.LEFT);
+        getWindow().setGravity(Gravity.BOTTOM | Gravity.LEFT);
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
         getWindow().setType(WindowManager.LayoutParams.TYPE_PRIORITY_PHONE);
         setCanceledOnTouchOutside(true);
