@@ -17,6 +17,10 @@
  */
 package com.tieto.multiwindow;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,10 +54,13 @@ public class ApplicationMenu extends ListViewMenu {
     private FreqMenu mFreqMenu;
     private FavMenu mFavMenu;
 
+    private ArrayList<String> mAppBlackList;
+
     public ApplicationMenu(Context context, UserDataInterface userData) {
         super(context, R.style.ApplicationMenuTheme, userData);
         mContext = context;
         mUserData = userData;
+        mAppBlackList = getAppsBlackList();
 
         updateListViewMenu();
         setBaseMenuWindowParams();
@@ -257,7 +264,9 @@ public class ApplicationMenu extends ListViewMenu {
                         .addCategory(Intent.CATEGORY_LAUNCHER), 0);
         for (ResolveInfo resolveInfo : resolveInfoList) {
             ApplicationInfo ai = resolveInfo.activityInfo.applicationInfo;
-            listViewItems.add(createListViewMenuItem(ai));
+            if (!isOnBlackList(ai.packageName)) {
+                listViewItems.add(createListViewMenuItem(ai));
+            }
         }
         return listViewItems;
     }
@@ -327,5 +336,34 @@ public class ApplicationMenu extends ListViewMenu {
         getListViewMenuItems().add(FREQ_POSITION, addRowToListViewItems(sFreq,
                 mContext.getResources().getString(R.string.freq_menu_title)));
         fillListViewMenu(getListViewMenuItems());
+    }
+
+    private ArrayList<String> getAppsBlackList() {
+        ArrayList<String> appBlackList = new ArrayList<String>();
+        String line;
+
+        InputStream is;
+        BufferedReader br;
+
+        try {
+            is = mContext.getAssets().open("app_black_list.txt");
+            br = new BufferedReader(new InputStreamReader(is));
+            while ((line = br.readLine()) != null) {
+                appBlackList.add(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return appBlackList;
+    }
+
+    private boolean isOnBlackList(String packageName) {
+        for (String blackApp : mAppBlackList) {
+            if (blackApp.equals(packageName)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
