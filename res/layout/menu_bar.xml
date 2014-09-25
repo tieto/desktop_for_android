@@ -30,36 +30,50 @@
         android:padding="2dp"
         android:src="@drawable/ic_launcher" />
 
-    <LinearLayout
-        android:id="@+id/bottomBar"
+    <HorizontalScrollView
+        android:id="@+id/horizontalScroll"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_toRightOf="@+id/startButton"
-        android:orientation="horizontal" >
+        android:layout_height="wrap_content"
+        android:layout_toLeftOf="@+id/lineView"
+        android:layout_toRightOf="@+id/startButton" >
 
-        <View
-            android:layout_width="1dp"
+        <LinearLayout
+            android:id="@+id/bottomBar"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/base_orange"
-            android:visibility="visible" />
-    </LinearLayout>
+            android:orientation="horizontal" >
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <View
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:layout_alignLeft="@+id/horizontalScroll"
+        android:layout_alignParentTop="true"
+        android:background="@color/base_orange"
+        android:visibility="visible" />
+
+    <View
+        android:id="@+id/lineView"
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginRight="74dp"
+        android:background="@color/base_orange"
+        android:visibility="visible" />
 
     <ImageButton
         android:id="@+id/optionsButton"
         style="@style/functional_button"
         android:layout_width="50dp"
         android:layout_height="50dp"
+        android:layout_alignLeft="@+id/lineView"
+        android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:layout_centerVertical="true"
+        android:layout_alignParentTop="true"
         android:clickable="true"
         android:scaleType="fitCenter"
         android:src="@drawable/ic_more" />
-
-    <View
-        android:layout_width="1dp"
-        android:layout_height="match_parent"
-        android:layout_toLeftOf="@id/optionsButton"
-        android:background="@color/base_orange"
-        android:visibility="visible" />
 
 </RelativeLayout>
