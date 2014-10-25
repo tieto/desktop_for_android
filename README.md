@@ -11,6 +11,7 @@ adb remount
 adb sync
 ```
 * In .classpath file modify path to multiwindow.jar (only put path to Jabol project)
+* Import into Eclipse and build
 
 ## Features
 [Regular Desktop](https://raw.githubusercontent.com/wiki/tieto/multiwindow_for_android/desktop_for_android/screen1.png)
